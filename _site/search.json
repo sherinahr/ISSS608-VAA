@@ -12,5 +12,26 @@
     "title": "ISSS608-VAA",
     "section": "",
     "text": "Welcome to Sherinah’s page for Visual Analytics and Applications!\nIn this website, you will find my attempts at completing the coursework, and I hope you will find it palatable."
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html",
+    "href": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html",
+    "title": "ISSS608 - Sherinah Rashid",
+    "section": "",
+    "text": "--- title: “Hands-on Exercise 1” author: “Sherinah Rashid” ---"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#install-and-launch-r-packages",
+    "href": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#install-and-launch-r-packages",
+    "title": "ISSS608 - Sherinah Rashid",
+    "section": "Install and launch R packages",
+    "text": "Install and launch R packages\nThe code chunk below uses p_load() of pacman package to check if tidyverse package is installed.\n\npacman::p_load(tidyverse)"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#importing-the-data",
+    "href": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#importing-the-data",
+    "title": "ISSS608 - Sherinah Rashid",
+    "section": "Importing the Data",
+    "text": "Importing the Data\nThe code chunk below imports exam_data.csv into R environment by using read_csv() function of readr package, part of the tidyverse package.\n\nexam_data <-read_csv(\"data/Exam_data.csv\")\n\nRows: 322 Columns: 7\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (4): ID, CLASS, GENDER, RACE\ndbl (3): ENGLISH, MATHS, SCIENCE\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
   }
 ]
