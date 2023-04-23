@@ -2,8 +2,8 @@
 title: "About"
 ---
 
-About this site
+Hello there, my name is Sherinah! 
 
-Welcome to Sherinah’s page for Visual Analytics and Applications!
+I am currently taking the Visual Analytics and Applications course.  
 
 In this website, you will find my attempts at completing the coursework, and I hope you will find it informative and aesthetically pleasing!
