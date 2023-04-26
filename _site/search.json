@@ -235,6 +235,6 @@
     "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-iv",
     "title": "In-class Exercise 1",
     "section": "1.6 Designing Data-drive Graphics for Analysis IV",
-    "text": "1.6 Designing Data-drive Graphics for Analysis IV\n\n1.6.1 The original design\n\nggplot(data=exam_data, \n       aes(x= MATHS, y = ENGLISH)) +\n  geom_point()\n\n\n\n\n\n\n1.6.2 Makeover!\n\nThe makeover designThe code chunk\n\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n       aes(x= MATHS, y = ENGLISH)) +\n  geom_point() +\n  xlim(0,100) + \n  ylim(0,100) +\n  geom_hline(yintercept = 50, linetype=\"dashed\", color = \"gray\", size=1) +\n  geom_vline(xintercept = 50, linetype=\"dashed\", color = \"gray\", size=1)"
+    "text": "1.6 Designing Data-drive Graphics for Analysis IV\n\n1.6.1 The original design\n\nggplot(data=exam_data, \n       aes(x= MATHS, y = ENGLISH)) +\n  geom_point()\n\n\n\n\n\n\n1.6.2 Makeover!\n\nThe makeover designThe code chunk\n\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n       aes(x= MATHS, y = ENGLISH)) +\n  geom_point() +\n  xlim(0,100) + \n  ylim(0,100) +\n  geom_hline(yintercept = 50, linetype=\"dashed\", \n             color = \"gray\", size=1) +\n  geom_vline(xintercept = 50, linetype=\"dashed\", \n             color = \"gray\", size=1)"
   }
 ]
