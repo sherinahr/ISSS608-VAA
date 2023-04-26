@@ -35,20 +35,6 @@
     "text": "1.3.1 R Graphics vs ggplot\nLet’s compare how R Graphics and ggplot a simple histogram.\n\nR Graphicsggplot\n\n\n\nhist(exam_data$MATHS)\n\n\n\n\n\n\n\nlibrary(ggplot2)\nggplot(data=exam_data, aes(x = MATHS)) +\n  geom_histogram(bins=10, \n                 boundary = 100,\n                 color=\"white\", \n                 fill=\"lightpink2\") +\n  ggtitle(\"Distribution of Maths Scores\") +theme_classic() \n\n\n\n\n\n\n\nAs you can see that the code chunk is relatively simple if R Graphics is used. Then, the question is why ggplot2 is recommended?\n\n\n\n\n\n\nImportant\n\n\n\nThe transferable skills from ggplot2 are not the idiosyncrasies of plotting syntax, but a powerful way of thinking about visualisation, as a way of mapping between variables and the visual properties of geometric objects that you can perceive."
   },
   {
-    "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#plotting-a-simple-bar-chart",
-    "href": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#plotting-a-simple-bar-chart",
-    "title": "Hands-on Exercise 1",
-    "section": "1.3.2 Plotting a simple bar chart",
-    "text": "1.3.2 Plotting a simple bar chart\n\nggplot(data = exam_data, \n       aes(x = RACE, fill= RACE)) + \n  geom_bar() +\n  xlab (\"Race\") +\n  ylab(\"Number of Students\") +\n  scale_fill_brewer(palette=\"Pastel2\") +\n  theme_classic() + \n  coord_flip()"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "ISSS608-VAA",
-    "section": "",
-    "text": "Welcome to Sherinah’s page for Visual Analytics and Applications!\nIn this website, you will find my attempts at completing the coursework, and I hope you will find it informative and aesthetically pleasing!"
-  },
-  {
     "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#a-layered-grammar-of-graphics",
     "href": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#a-layered-grammar-of-graphics",
     "title": "Hands-on Exercise 1",
@@ -173,5 +159,82 @@
     "title": "Hands-on Exercise 1",
     "section": "1.10.2 Changing the y- and x-axis range",
     "text": "1.10.2 Changing the y- and x-axis range\nThe scatterplot in Section 1.7.9 is slightly misleading because the y-axis and x-axis ranges are not equal. See below for the amended code block.\n\nggplot(data=exam_data, \n       aes(x= MATHS, y = ENGLISH, fill = GENDER)) +\n  geom_point() + theme_classic() +\n  geom_smooth(method=lm, linewidth=0.5) +\n  coord_cartesian(xlim=c(0,100),\n                  ylim=c(0,100))\n\n`geom_smooth()` using formula = 'y ~ x'"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html",
+    "title": "In-class Exercise 1",
+    "section": "",
+    "text": "Using p_load() of pacman package to load tidyverse.\n\npacman::p_load(tidyverse)\n\nImporting the data.\n\nexam_data <-read_csv(\"data/Exam_data.csv\")"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#the-original-design",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#the-original-design",
+    "title": "In-class Exercise 1",
+    "section": "1.3.1 The original design",
+    "text": "1.3.1 The original design\nA simple vertical bar chart for frequency analysis. Critical analysis:\n\ny-axis label is not clear (i.e., count)\nTo support effective comparison, the bars should be sorted by their respective frequencies.\nFor static graph, frequency values should be added to provide additional information."
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#makeover",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#makeover",
+    "title": "In-class Exercise 1",
+    "section": "1.3.2 Makeover!",
+    "text": "1.3.2 Makeover!\n\nThe makeover designThe code chunk\n\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, aes(x= reorder (RACE,RACE,\n                           function(x)-length(x)))) +\n  geom_bar() + \n  ylim(0, 220) +\n  xlab (\"Race\") +\n  ylab(\"Number of Students\") +\n  geom_text(stat=\"count\", \n      aes(label=paste0(..count.., \", \", \n      round(..count../sum(..count..)*100, 1), \"%\")),\n      vjust=-1)\n\n\n\n\nThis code chunk uses fct_infreq() of forcats package.\n\nexam_data %>%\n  mutate(RACE = fct_infreq(RACE)) %>%\n  ggplot(aes(x = RACE)) + \n  geom_bar()+\n  ylim(0,220) +\n  geom_text(stat=\"count\", \n      aes(label=paste0(..count.., \", \", \n      round(..count../sum(..count..)*100,\n            1), \"%\")),\n      vjust=-1) +\n  xlab(\"Race\") +\n  ylab(\"No. of\\nPupils\") +\n  theme(axis.title.y=element_text(angle = 0))"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#the-original-design-1",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#the-original-design-1",
+    "title": "In-class Exercise 1",
+    "section": "1.4.1 The original design",
+    "text": "1.4.1 The original design\nA histogram of the Math scores:\n\nggplot(data=exam_data, \n       aes(x = MATHS)) +\n  geom_histogram(bins=20)"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#makeover-1",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#makeover-1",
+    "title": "In-class Exercise 1",
+    "section": "1.4.2 Makeover!",
+    "text": "1.4.2 Makeover!\n\nThe makeover designThe code chunk\n\n\n\nAdding mean and median lines on the histogram plot.\nChange fill and line color\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n       aes(x = MATHS)) +\n  geom_histogram(bins=20, fill=\"lightblue\", color =\"black\") +\n  geom_vline(aes(xintercept=mean(MATHS),\n            color=\"Mean\"), linetype=\"dashed\", size=1) + \n    geom_vline(aes(xintercept=median(MATHS),\n            color=\"Median\"), linetype=\"dashed\", size=1) +\n    scale_color_manual(name = \"Statistics\", values = c(Median = \"blue\", Mean = \"red\"))"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "ISSS608-VAA",
+    "section": "",
+    "text": "Welcome to Sherinah’s page for Visual Analytics and Applications!\nIn this website, you will find my attempts at completing the coursework, and I hope you will find it informative and aesthetically pleasing!"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#working-with-theme",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#working-with-theme",
+    "title": "In-class Exercise 1",
+    "section": "1.2 Working with theme",
+    "text": "1.2 Working with theme\n\nChanging the colors of plot panel background of theme_minimal() to light blue and the color of grid lines to white.\n\n\nThe plotThe code chunk\n\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n       aes(x=RACE)) +\n  geom_bar() + \n  theme(panel.background = element_rect(fill = \"#ADD8E6\",\n                                linewidth = 2, linetype = \"solid\"),\n  panel.grid.major = element_line(linewidth = 0.5, \n                                  linetype = 'solid',\n                                colour = \"white\"), \n  panel.grid.minor = element_line(linewidth = 0.25, \n                                  linetype = 'solid',\n                                colour = \"white\"))+\n  coord_flip()"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-i",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-i",
+    "title": "In-class Exercise 1",
+    "section": "1.3 Designing Data-drive Graphics for Analysis I",
+    "text": "1.3 Designing Data-drive Graphics for Analysis I\n\n1.3.1 The original design\nA simple vertical bar chart for frequency analysis. Critical analysis:\n\ny-axis label is not clear (i.e., count)\nTo support effective comparison, the bars should be sorted by their respective frequencies.\nFor static graph, frequency values should be added to provide additional information.\n\n\n\n\n\n\n\n\n1.3.2 Makeover!\n\nThe makeover designThe code chunk\n\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, aes(x= reorder (RACE,RACE,\n                           function(x)-length(x)))) +\n  geom_bar() + \n  ylim(0, 220) +\n  xlab (\"Race\") +\n  ylab(\"Number of Students\") +\n  geom_text(stat=\"count\", \n      aes(label=paste0(..count.., \", \", \n      round(..count../sum(..count..)*100, 1), \"%\")),\n      vjust=-1)\n\n\n\n\nAlternatively, this code chunk uses fct_infreq() of forcats package.\n\nexam_data %>%\n  mutate(RACE = fct_infreq(RACE)) %>%\n  ggplot(aes(x = RACE)) + \n  geom_bar()+\n  ylim(0,220) +\n  geom_text(stat=\"count\", \n      aes(label=paste0(..count.., \", \", \n      round(..count../sum(..count..)*100,\n            1), \"%\")),\n      vjust=-1) +\n  xlab(\"Race\") +\n  ylab(\"No. of\\nPupils\") +\n  theme(axis.title.y=element_text(angle = 0))"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-ii",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-ii",
+    "title": "In-class Exercise 1",
+    "section": "1.4 Designing Data-drive Graphics for Analysis II",
+    "text": "1.4 Designing Data-drive Graphics for Analysis II\n\n1.4.1 The original design\nA histogram of the Math scores:\n\nggplot(data=exam_data, \n       aes(x = MATHS)) +\n  geom_histogram(bins=20)    \n\n\n\n\n\n\n1.4.2 Makeover!\n\nThe makeover designThe code chunk\n\n\n\nAdding mean and median lines on the histogram plot.\nChange fill and line color\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n       aes(x = MATHS)) +\n  geom_histogram(bins=20, fill=\"lightblue\", color =\"black\") +\n  geom_vline(aes(xintercept=mean(MATHS),\n            color=\"Mean\"), linetype=\"dashed\", size=1) + \n    geom_vline(aes(xintercept=median(MATHS),\n            color=\"Median\"), linetype=\"dashed\", size=1) +\n    scale_color_manual(name = \"Statistics\", \n                       values = c(Median = \"blue\", Mean = \"red\")) +\n    theme(legend.position = \"bottom\")"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-iii",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-iii",
+    "title": "In-class Exercise 1",
+    "section": "1.5 Designing Data-drive Graphics for Analysis III",
+    "text": "1.5 Designing Data-drive Graphics for Analysis III\n\n1.5.1 The original design\nThe histograms below are elegantly designed but not informative. This is because they only reveal the distribution of English scores by gender but without context such as all pupils.\n\nggplot(data=exam_data, \n       aes(x = ENGLISH)) +\n  geom_histogram() +\n  facet_wrap(~ GENDER) \n\n\n\n\n\n\n1.5.2 Makeover!\n\nThe makeover designThe code chunk\n\n\nThe background histograms show the distribution of English scores for all pupils.\n\n\n\n\n\n\n\n\nd_bg <- exam_data[, -3]  \n\nggplot(exam_data, aes(x = ENGLISH, fill = GENDER)) +\n  geom_histogram(data = d_bg, fill = \"grey\", alpha = .5) +\n  geom_histogram(colour = \"black\") +\n  facet_wrap(~ GENDER) +\n  guides(fill = FALSE) +  \n  theme_bw()"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-iv",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#designing-data-drive-graphics-for-analysis-iv",
+    "title": "In-class Exercise 1",
+    "section": "1.6 Designing Data-drive Graphics for Analysis IV",
+    "text": "1.6 Designing Data-drive Graphics for Analysis IV\n\n1.6.1 The original design\n\nggplot(data=exam_data, \n       aes(x= MATHS, y = ENGLISH)) +\n  geom_point()\n\n\n\n\n\n\n1.6.2 Makeover!\n\nThe makeover designThe code chunk\n\n\n\n\n\n\n\n\n\n\nggplot(data=exam_data, \n       aes(x= MATHS, y = ENGLISH)) +\n  geom_point() +\n  xlim(0,100) + \n  ylim(0,100) +\n  geom_hline(yintercept = 50, linetype=\"dashed\", color = \"gray\", size=1) +\n  geom_vline(xintercept = 50, linetype=\"dashed\", color = \"gray\", size=1)"
   }
 ]
