@@ -3,6 +3,8 @@ title: "Hands-on Exercise 1"
 author: "Sherinah Rashid"
 ---
 
+# **A Layered Grammar of Graphics: ggplot2 methods**
+
 # **1.1 Learning Outcome**
 
 In this chapter, you will learn the basic principles and essential components of ggplot2. At the same time, you will gain hands-on experience on using these components to plot statistical graphics based on the principle of Layered Grammar of Graphics. By then end of this chapter you will be able to apply the essential graphical elements provided by ggplot2 to create elegant and yet functional statistical graphics.
