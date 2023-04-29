@@ -448,6 +448,8 @@ Figure in the tabset below shows a composite of two histograms created using pat
 ```{r}
 #| echo: false 
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
 p1 + p2
 
@@ -458,6 +460,8 @@ p1 + p2
 ```{r}
 #| eval: false
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
 p1 + p2
 
@@ -480,8 +484,11 @@ To learn more about, refer to [Plot Assembly](https://patchwork.data-imaginist.c
 ```{r}
 #| echo: false 
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
-(p1 / p2) | p3
+((p1 / p2) | p3) &
+  theme(title=element_text(size=7, face ='bold'))
 
 ```
 
@@ -490,8 +497,11 @@ To learn more about, refer to [Plot Assembly](https://patchwork.data-imaginist.c
 ```{r}
 #| eval: false
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
-(p1 / p2) | p3
+((p1 / p2) | p3) &
+  theme(title=element_text(size=7, face ='bold'))
 
 ```
 :::
@@ -506,9 +516,12 @@ In order to identify subplots in text, patchwork also provides auto-tagging capa
 ```{r}
 #| echo: false 
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
-((p1 / p2) | p3) + 
-  plot_annotation(tag_levels = 'I')
+grid <- ((p1 / p2) | p3) + plot_annotation(tag_levels = 'I') 
+grid & theme(title=element_text(size=7, face ='bold')) 
+
 
 ```
 
@@ -517,9 +530,11 @@ In order to identify subplots in text, patchwork also provides auto-tagging capa
 ```{r}
 #| eval: false
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
-((p1 / p2) | p3) + 
-  plot_annotation(tag_levels = 'I')
+grid <- ((p1 / p2) | p3) + plot_annotation(tag_levels = 'I') 
+grid & theme(title=element_text(size=7, face ='bold')) 
 
 ```
 :::
@@ -534,6 +549,8 @@ Beside providing functions to place plots next to each other based on the provid
 ```{r}
 #| echo: false 
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
 p12 <- p1|p2
 p3 + inset_element(p2, 
@@ -549,6 +566,8 @@ p3 + inset_element(p2,
 ```{r}
 #| eval: false
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
 p12 <- p1|p2
 p3 + inset_element(p2, 
@@ -570,9 +589,12 @@ Figure below is created by combining patchwork and theme_economist() of ggthemes
 ```{r}
 #| echo: false 
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
 patchwork <- (p1 / p2) | p3
-patchwork & theme_economist()
+patchwork & theme_economist() + theme(title=element_text(size = 6, face ='bold'), 
+                                      axis.title.y=element_text(size = 9), axis.title.x=element_text(size = 9)) 
 
 ```
 
@@ -581,9 +603,12 @@ patchwork & theme_economist()
 ```{r}
 #| eval: false
 #| warning: false
+#| fig-width: 14
+#| fig-asp: 0.618
 
 patchwork <- (p1 / p2) | p3
-patchwork & theme_economist()
+patchwork & theme_economist() + theme(title=element_text(size = 6, face ='bold'), 
+                                      axis.title.y=element_text(size = 9), axis.title.x=element_text(size = 9))  
 
 ```
 :::
