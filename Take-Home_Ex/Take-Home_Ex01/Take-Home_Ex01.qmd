@@ -24,7 +24,7 @@ Specifically, this exercise seeks to fulfill the following objectives:
 
 ### **1.2 The Data**
 
-Two data sets in csv format are provided for the purpose of this exercise - Pariticpants & Financial Journal.
+Two data sets in csv format are provided for the purpose of this exercise - Participants & Financial Journal.
 
 #### **1.2.1 Participants Dataset**
 
@@ -52,7 +52,7 @@ This dataset contains information about the residents of City of Engagement that
 
 : Data Fields - Participants.csv
 
-#### **1.2.2 FinancialJournal Dataset** 
+#### **1.2.2 FinancialJournal Dataset**
 
 This dataset contains information about the residents of City of Engagement that have agreed to participate in this study and comprises the following fields:
 
@@ -90,9 +90,84 @@ There are a few data quality issues with the datasets:
 
 ### **2.1 Install and Launch R packages**
 
+In this exercise, the following packages will be used: tidyverse, ggplot2, dplyr, patchwork, ggthemes, hrbrthemes, and ggrepel. The codechunk below will be used to check if these packages have been installed and also will load them onto the working R environment:
+
+```{r}
+pacman::p_load(ggrepel, patchwork, ggplot2, dplyr,
+               ggthemes, hrbrthemes,
+               tidyverse) 
+```
+
 ### **2.2 Import Datasets**
 
+The code chunk below imports the datasets into R environment by using read_csv() function of readr package as part of tidyverse.
+
+```{r}
+ppt <-read_csv("data/Participants.csv", show_col_types = FALSE)
+fj <- read_csv("data/FinancialJournal.csv", show_col_types = FALSE)
+```
+
+The summary function is used to provide an overview of the datasets.
+
+```{r}
+#| eval: true
+summary(ppt)
+```
+
+```{r}
+#| eval: true
+summary(fj)
+```
+
 ### **2.3 Data Wrangling**
+
+#### **2.3.1 Participants Dataset**
+
+Firstly, the age variable is binned with the following code chunk. The mutate() function of dplyr is used to create a new variable called Age_Category while preserving the existing variable of age.
+
+```{r}
+ppt <- ppt %>%
+  mutate(Age_Category=cut(age, 
+                          breaks=c(17, 20, 30, 40, 50, 60),
+                          labels=c('20 & Below', '21-30', '31-40', 
+                                   '41-50', '51 and above')))
+
+# Check if the ages are reflected correctly
+head(ppt$age)
+head(ppt$Age_Category)
+
+```
+
+The other change is to make the field "haveKids" clearer. Currently, it reflects the boolean values of True/False. To ensure clarity and better understanding of our subsequent charts, the values will be changed to Yes/No, as reflected in the below code chunk. As above, the mutate() function will be used to create a new variable called Have_Kids.
+
+```{r}
+ppt<-ppt %>%
+  mutate(Have_Kids = case_when(haveKids==TRUE ~ "Yes", haveKids==FALSE ~ "No"))
+
+# Check if the changes are reflected correctly
+head(ppt$Have_Kids)
+```
+
+Lastly, we will rename the other columns for nicer formatting and ease of reading with the below code chunk. As we are not making changes to the values, the column names will be amended in place.
+
+```{r}
+ppt <- ppt %>%
+  rename('Participant_ID' = 'participantId', 
+         'Household_Size' = 'householdSize', 
+         'Education_Level' = 'educationLevel', 
+         'Interest_Group' = 'interestGroup', 
+         'Joviality' = 'joviality')
+
+# Check if the changes are reflected correctly
+colnames(ppt)
+
+```
+
+#### **2.3.2 FinancialJournal Dataset**
+
+
+#### **2.3.3 Combining the Datasets**
+
 
 ## **3. Visualisations & Insights**
 
