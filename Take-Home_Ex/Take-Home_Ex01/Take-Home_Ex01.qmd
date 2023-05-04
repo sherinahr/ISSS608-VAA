@@ -52,7 +52,7 @@ This dataset contains information about the residents of City of Engagement that
 
 : Data Fields - Participants.csv
 
-#### **1.2.2 FinancialJournal Dataset**
+#### **1.2.2 FinancialJournal Dataset** 
 
 This dataset contains information about the residents of City of Engagement that have agreed to participate in this study and comprises the following fields:
 
