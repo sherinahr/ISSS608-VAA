@@ -1,6 +1,99 @@
 ---
 title: "Take-Home_Ex01"
 author: "Sherinah Rashid"
+tbl-cap-location: top
 ---
 
-Sherinah was here. 
+## **1. Overview**
+
+### **1.1 Introduction**
+
+City of Engagement, with a total population of 50,000, is a small city located at Country of Nowhere. The city serves as a service centre of an agriculture region surrounding the city. The main agriculture of the region is fruit farms and vineyards. The local council of the city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns, among other things. The city aims to use the data to assist with their major community revitalization efforts, including how to allocate a very large city renewal grant they have recently received.
+
+This take-home exercise will explore the demographic and financial characteristics of the city of Engagement using static and interactive statistical graphics methods. The data will be processed using the [tidyverse](https://www.tidyverse.org/) family of packages and the visualisations developed using [ggplot2](https://ggplot2.tidyverse.org/index.html) and its extensions.
+
+Specifically, this exercise seeks to fulfill the following objectives:
+
+-   Provide an understanding of the demographics of the City of Engagement;
+
+-   Explore the factors influencing joviality index;
+
+-   Examine the relationship between income and cost of living; and
+
+-   Explore the factors influencing income.
+
+### **1.2 The Data**
+
+Two data sets in csv format are provided for the purpose of this exercise - Pariticpants & Financial Journal.
+
+#### **1.2.1 Participants Dataset**
+
+This dataset contains information about the residents of City of Engagement that have agreed to participate in this study and comprises the following fields:
+
++-------------------------+-----------------------------------------------------------------------------------------------------------+
+| Field                   | Description                                                                                               |
++=========================+===========================================================================================================+
+| participantId (integer) | Unique ID assigned to each participant                                                                    |
++-------------------------+-----------------------------------------------------------------------------------------------------------+
+| householdSize (integer) | Number of people in the household                                                                         |
++-------------------------+-----------------------------------------------------------------------------------------------------------+
+| haveKids (boolean)      | Presence of children in the household                                                                     |
++-------------------------+-----------------------------------------------------------------------------------------------------------+
+| age (integer)           | Participant's age in years at the start of the study                                                      |
++-------------------------+-----------------------------------------------------------------------------------------------------------+
+| educationLevel          | Participant's education level                                                                             |
+|                         |                                                                                                           |
+| (string factor)         | \[Low, HighSchoolorCollege, Bachelors, Graduate\]                                                         |
++-------------------------+-----------------------------------------------------------------------------------------------------------+
+| interestGroup (char)    | Character representing the participant's stated primary interest group \[A,B,C,D,E,F,G,H,I,J\]            |
++-------------------------+-----------------------------------------------------------------------------------------------------------+
+| joviality (float)       | Value ranging from \[0,1\] indicating the participant's overall happiness level at the start of the study |
++-------------------------+-----------------------------------------------------------------------------------------------------------+
+
+: Data Fields - Participants.csv
+
+#### **1.2.2 FinancialJournal Dataset**
+
+This dataset contains information about the residents of City of Engagement that have agreed to participate in this study and comprises the following fields:
+
++-------------------------+----------------------------------------------------------------+
+| Field                   | Description                                                    |
++=========================+================================================================+
+| participantId (integer) | Unique ID assigned to each participant                         |
++-------------------------+----------------------------------------------------------------+
+| timestamp (datetime)    | Time when the check-in was logged                              |
++-------------------------+----------------------------------------------------------------+
+| category                | String describing the expense category                         |
+|                         |                                                                |
+| (string factor)         | \[Education, Food, Recreation, RentAdjustment, Shelter, Wage\] |
++-------------------------+----------------------------------------------------------------+
+| amount (double)         | Amount of the transaction                                      |
++-------------------------+----------------------------------------------------------------+
+
+: Data Fields - FinancialJournal.csv
+
+#### **1.2.3 Challenges with the Datasets**
+
+There are a few data quality issues with the datasets:
+
+1.  The timestamp information in the FinancialJournal.csv is too granular and should be changed to reflect the month and year instead.
+
+2.  A quick analysis showed that there were duplicates in the data; these will be removed to ensure the data will not be skewed.
+
+3.  The quick analysis also highlighted that there were some participants who did not have entries for all 6 months; it is possible that they are no longer residents of the City. Since the aim of this exercise is to explore the financial trends of the residents, these participants will be removed.
+
+4.  The data is on an individual level and thus will be aggregated accordingly for the analyses.
+
+5.  After addressing the above issues, the datasets will be combined to ensure a comprehensive and accurate analysis.
+
+## **2. Data Preparation**
+
+### **2.1 Install and Launch R packages**
+
+### **2.2 Import Datasets**
+
+### **2.3 Data Wrangling**
+
+## **3. Visualisations & Insights**
+
+## **4. Key Takeaways**
