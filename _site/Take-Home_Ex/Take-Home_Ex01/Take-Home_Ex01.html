@@ -146,7 +146,25 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview"><strong>1. Overview</strong></a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><strong>1.1 Introduction</strong></a></li>
+  <li><a href="#the-data" id="toc-the-data" class="nav-link" data-scroll-target="#the-data"><strong>1.2 The Data</strong></a></li>
+  </ul></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation"><strong>2. Data Preparation</strong></a>
+  <ul class="collapse">
+  <li><a href="#install-and-launch-r-packages" id="toc-install-and-launch-r-packages" class="nav-link" data-scroll-target="#install-and-launch-r-packages"><strong>2.1 Install and Launch R packages</strong></a></li>
+  <li><a href="#import-datasets" id="toc-import-datasets" class="nav-link" data-scroll-target="#import-datasets"><strong>2.2 Import Datasets</strong></a></li>
+  <li><a href="#data-wrangling" id="toc-data-wrangling" class="nav-link" data-scroll-target="#data-wrangling"><strong>2.3 Data Wrangling</strong></a></li>
+  </ul></li>
+  <li><a href="#visualisations-insights" id="toc-visualisations-insights" class="nav-link" data-scroll-target="#visualisations-insights"><strong>3. Visualisations &amp; Insights</strong></a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><strong>4. Key Takeaways</strong></a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -174,9 +192,142 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<p>Sherinah was here.</p>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview"><strong>1. Overview</strong></h2>
+<section id="introduction" class="level3">
+<h3 class="anchored" data-anchor-id="introduction"><strong>1.1 Introduction</strong></h3>
+<p>City of Engagement, with a total population of 50,000, is a small city located at Country of Nowhere. The city serves as a service centre of an agriculture region surrounding the city. The main agriculture of the region is fruit farms and vineyards. The local council of the city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns, among other things. The city aims to use the data to assist with their major community revitalization efforts, including how to allocate a very large city renewal grant they have recently received.</p>
+<p>This take-home exercise will explore the demographic and financial characteristics of the city of Engagement using static and interactive statistical graphics methods. The data will be processed using the <a href="https://www.tidyverse.org/">tidyverse</a> family of packages and the visualisations developed using <a href="https://ggplot2.tidyverse.org/index.html">ggplot2</a> and its extensions.</p>
+<p>Specifically, this exercise seeks to fulfill the following objectives:</p>
+<ul>
+<li><p>Provide an understanding of the demographics of the City of Engagement;</p></li>
+<li><p>Explore the factors influencing joviality index;</p></li>
+<li><p>Examine the relationship between income and cost of living; and</p></li>
+<li><p>Explore the factors influencing income.</p></li>
+</ul>
+</section>
+<section id="the-data" class="level3">
+<h3 class="anchored" data-anchor-id="the-data"><strong>1.2 The Data</strong></h3>
+<p>Two data sets in csv format are provided for the purpose of this exercise - Pariticpants &amp; Financial Journal.</p>
+<section id="participants-dataset" class="level4">
+<h4 class="anchored" data-anchor-id="participants-dataset"><strong>1.2.1 Participants Dataset</strong></h4>
+<p>This dataset contains information about the residents of City of Engagement that have agreed to participate in this study and comprises the following fields:</p>
+<table class="table">
+<caption>Data Fields - Participants.csv</caption>
+<colgroup>
+<col style="width: 19%">
+<col style="width: 80%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>participantId (integer)</td>
+<td>Unique ID assigned to each participant</td>
+</tr>
+<tr class="even">
+<td>householdSize (integer)</td>
+<td>Number of people in the household</td>
+</tr>
+<tr class="odd">
+<td>haveKids (boolean)</td>
+<td>Presence of children in the household</td>
+</tr>
+<tr class="even">
+<td>age (integer)</td>
+<td>Participant’s age in years at the start of the study</td>
+</tr>
+<tr class="odd">
+<td><p>educationLevel</p>
+<p>(string factor)</p></td>
+<td><p>Participant’s education level</p>
+<p>[Low, HighSchoolorCollege, Bachelors, Graduate]</p></td>
+</tr>
+<tr class="even">
+<td>interestGroup (char)</td>
+<td>Character representing the participant’s stated primary interest group [A,B,C,D,E,F,G,H,I,J]</td>
+</tr>
+<tr class="odd">
+<td>joviality (float)</td>
+<td>Value ranging from [0,1] indicating the participant’s overall happiness level at the start of the study</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="financialjournal-dataset" class="level4">
+<h4 class="anchored" data-anchor-id="financialjournal-dataset"><strong>1.2.2 FinancialJournal Dataset</strong></h4>
+<p>This dataset contains information about the residents of City of Engagement that have agreed to participate in this study and comprises the following fields:</p>
+<table class="table">
+<caption>Data Fields - FinancialJournal.csv</caption>
+<colgroup>
+<col style="width: 28%">
+<col style="width: 71%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>participantId (integer)</td>
+<td>Unique ID assigned to each participant</td>
+</tr>
+<tr class="even">
+<td>timestamp (datetime)</td>
+<td>Time when the check-in was logged</td>
+</tr>
+<tr class="odd">
+<td><p>category</p>
+<p>(string factor)</p></td>
+<td><p>String describing the expense category</p>
+<p>[Education, Food, Recreation, RentAdjustment, Shelter, Wage]</p></td>
+</tr>
+<tr class="even">
+<td>amount (double)</td>
+<td>Amount of the transaction</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="challenges-with-the-datasets" class="level4">
+<h4 class="anchored" data-anchor-id="challenges-with-the-datasets"><strong>1.2.3 Challenges with the Datasets</strong></h4>
+<p>There are a few data quality issues with the datasets:</p>
+<ol type="1">
+<li><p>The timestamp information in the FinancialJournal.csv is too granular and should be changed to reflect the month and year instead.</p></li>
+<li><p>A quick analysis showed that there were duplicates in the data; these will be removed to ensure the data will not be skewed.</p></li>
+<li><p>The quick analysis also highlighted that there were some participants who did not have entries for all 6 months; it is possible that they are no longer residents of the City. Since the aim of this exercise is to explore the financial trends of the residents, these participants will be removed.</p></li>
+<li><p>The data is on an individual level and thus will be aggregated accordingly for the analyses.</p></li>
+<li><p>After addressing the above issues, the datasets will be combined to ensure a comprehensive and accurate analysis.</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="data-preparation" class="level2">
+<h2 class="anchored" data-anchor-id="data-preparation"><strong>2. Data Preparation</strong></h2>
+<section id="install-and-launch-r-packages" class="level3">
+<h3 class="anchored" data-anchor-id="install-and-launch-r-packages"><strong>2.1 Install and Launch R packages</strong></h3>
+</section>
+<section id="import-datasets" class="level3">
+<h3 class="anchored" data-anchor-id="import-datasets"><strong>2.2 Import Datasets</strong></h3>
+</section>
+<section id="data-wrangling" class="level3">
+<h3 class="anchored" data-anchor-id="data-wrangling"><strong>2.3 Data Wrangling</strong></h3>
+</section>
+</section>
+<section id="visualisations-insights" class="level2">
+<h2 class="anchored" data-anchor-id="visualisations-insights"><strong>3. Visualisations &amp; Insights</strong></h2>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways"><strong>4. Key Takeaways</strong></h2>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
