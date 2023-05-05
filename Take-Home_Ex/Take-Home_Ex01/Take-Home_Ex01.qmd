@@ -94,7 +94,7 @@ In this exercise, the following packages will be used: tidyverse, ggplot2, dplyr
 
 ```{r}
 pacman::p_load(ggrepel, patchwork, ggplot2, dplyr,
-               ggthemes, hrbrthemes,
+               ggthemes, hrbrthemes, zoo, knitr,
                tidyverse) 
 ```
 
@@ -164,6 +164,84 @@ colnames(ppt)
 ```
 
 #### **2.3.2 FinancialJournal Dataset**
+
+As stated in section 1.2.3 Challenges, there are a number of issues with the dataset. 
+
+Firstly, there are some duplicate rows in the dataset which have to be removed using the distinct() function. As the code below shows, there were 1,113 duplicate rows in the FinancialJournal dataset.
+
+
+```{r}
+fj_2 <- fj %>% distinct()
+nrow(fj) - nrow(fj_2)
+```
+
+Next, there were some participants who did not have entries for all 6 months. To find the these participants, first the data was grouped by the Participant_ID. Examination of the results show that there are 131 participants which have lower than 1,000 transactions. 
+
+```{r}
+#| output: false
+
+fj_2 %>%
+  group_by(participantId) %>%
+  summarize(transaction_count = n()) %>%
+  arrange(transaction_count)
+
+```
+
+The code chunk below will filter out these 131 participants and tell us how many rows were removed. The data frame fj_final now has no duplicates, and only residents who still live in City of Engagement.
+
+```{r}
+#| output: false
+fj_final <- subset(fj_2, with(fj_2, participantId %in% 
+                            names(which(table(participantId)>=1000))))
+
+```
+
+Next, we would want to convert all of the timestamp data into Month-Year format for ease of comparison using the code chunk below. 
+
+```{r}
+fj_final <- fj_final %>%
+  mutate (Year_month = as.yearmon(timestamp)) 
+
+head(fj_final)
+```
+
+Further, most of the values are negative as they reflect expenditures for food, education, recreation and shelter. The positive amounts are for wage and [rent adjustment](https://www.lawinsider.com/dictionary/rent-adjustment-amount). The data will also be changed from long to wide format for easier reading using the pivot_wider() function. 
+
+
+```{r}
+#| output: false
+
+fj_final$amount <- abs(fj_final$amount)
+fj_final$amount <- round(fj_final$amount,digits=0)
+
+fj_final_by_year <- fj_final %>%
+  group_by(participantId, category,Year_month) %>%
+  summarise(Total = sum(amount))
+
+fj_final_by_year <- pivot_wider(
+  fj_final_by_year,names_from = category,values_from =Total)
+
+# Replace NA values with 0 for Rent Adjustment
+fj_final_by_year[is.na(fj_final_by_year)] <- 0
+
+```
+
+To find out the cost of living and total income of the residents, the values of the expenses for the four categories, and the wage and rent adjustment will be summed up respectively. We will also derive the total savings i.e. Total income - Cost of living.
+
+```{r}
+
+fj_final_by_year$Cost_of_living <- fj_final_by_year$Education + 
+  fj_final_by_year$Food + fj_final_by_year$Recreation + 
+  fj_final_by_year$Shelter
+
+fj_final_by_year$Total_Income <- fj_final_by_year$Wage + 
+  fj_final_by_year$RentAdjustment
+
+fj_final_by_year$Total_Savings <- fj_final_by_year$Total_Income - fj_final_by_year$Cost_of_living
+
+head(fj_final_by_year)
+
+```
 
 
 #### **2.3.3 Combining the Datasets**
