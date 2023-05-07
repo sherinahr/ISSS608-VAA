@@ -306,5 +306,33 @@
     "title": "Take-Home_Ex01",
     "section": "4. Key Takeaways",
     "text": "4. Key Takeaways"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex04/In-class_Ex04.html",
+    "href": "In-class_Ex/In-class_Ex04/In-class_Ex04.html",
+    "title": "In-class_Ex04",
+    "section": "",
+    "text": "In today’s in class exercise, Prof shared with us how to combine a qqplot and tabular results of Shapiro test in a single plot."
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#import-libraries",
+    "href": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#import-libraries",
+    "title": "In-class_Ex04",
+    "section": "Import libraries",
+    "text": "Import libraries\nThe new libraries used today are :\n\nrstatic: Allows us to perform basic statistical tests, including t-test, Wilcoxon test, ANOVA, Kruskal-Wallis and correlation analyses.\ngt() : starting from a tibble table, customise a table and export in various formats. Most importantly, it works with patch. We will save the tabular results from shapiro test as gt object and export using gtsave() into .png file later.\nNote:\nImporting tidyverse: will automatically provide read_r() <- for read_csv()\n\n\npacman::p_load(rstatix, gt, patchwork,tidyverse,nortest,webshot2)\n\n\nexam <- read_csv('data/Exam_data.csv')"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#background-info",
+    "href": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#background-info",
+    "title": "In-class_Ex04",
+    "section": "Background info",
+    "text": "Background info\n\nThe Anderson_darling test\nUsually, when we check for normality of a distribution, we can use the Anderson-darling test or the Shapiro test. Hitting the three commands below will give us the results, but no visualisation.\n\nad.test(exam$ENGLISH)\n\n\n    Anderson-Darling normality test\n\ndata:  exam$ENGLISH\nA = 4.3661, p-value = 7.341e-11\n\n\n\n\nThe shapiro.test\nUsing shapiro.test will generate result as a HTML object.\n\nshapiro.test(exam$ENGLISH)\n\n\n    Shapiro-Wilk normality test\n\ndata:  exam$ENGLISH\nW = 0.9543, p-value = 1.811e-08\n\n\nUsing shapiro_test will generate result as a tibble object.\n\nexam %>% \n  shapiro_test(ENGLISH)\n\n# A tibble: 1 × 3\n  variable statistic            p\n  <chr>        <dbl>        <dbl>\n1 ENGLISH      0.954 0.0000000181\n\n\n\n\nQQplot\nWe can also generate the qqplot to check for normality. However qqplot does not print any p-values.\n\nggplot(exam,\n       aes(sample=ENGLISH)) +  #<<< use a new argument call sample: el scores\n  stat_qq() +\n  stat_qq_line()"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#task-for-today",
+    "href": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#task-for-today",
+    "title": "In-class_Ex04",
+    "section": "Task for today:",
+    "text": "Task for today:\n\nCombine qqplot with results from Shapiro-test.\nRecall that in hands-on 3, we use DT to create an interactive table , however it is not recognized by patchwork.\nWe start by storing the shapiro test in a tibble table as shown above. Then we will use the gt() package and export it as a .png using gtsave().\n\nqq <- ggplot(exam,\n       aes(sample=ENGLISH)) +  #<<< use a new argument call sample: el scores\n  stat_qq() +\n  stat_qq_line()\n\nsw_t <- exam %>% \n  shapiro_test(ENGLISH) %>% gt()   #<<< make into a gt format (will give a nice table)  shapiro.test is not used here as it gives output in another format.\n\ntmp <- tempfile(fileext = '.png') # create  temp table\ngtsave(sw_t, tmp)  # use gtsave() to save sw_t into tmp folder\ntable_png <- png::readPNG(tmp, native = TRUE)\n\nqq+table_png\n\n\n\n\nI tried to customise the gt() table.\n\nqq <- ggplot(exam,\n       aes(sample=ENGLISH)) +  #<<< use a new argument call sample: el scores\n  stat_qq() +\n  stat_qq_line()\n\nsw_t <- exam %>% \n  shapiro_test(ENGLISH) %>% gt()  %>%  \n  tab_header(\n    title = 'Shapiro Test for Normality',\n    subtitle = 'English scores')\n\ntmp <- tempfile(fileext = '.png') # create  temp table\ngtsave(sw_t, tmp)  # use gtsave() to save sw_t into tmp folder\ntable_png <- png::readPNG(tmp, native = TRUE)\n\nqq+table_png  # use patchwork to stitch\n\n\n\n\nThe results of the Shapiro test shows that p-value < 0.05 and we have enough statistical evidence to reject the null hypothesis and conclude that English scores do not follow normal distribution."
   }
 ]

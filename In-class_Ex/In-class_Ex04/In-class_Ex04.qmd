@@ -1,0 +1,129 @@
+---
+title: "In-class_Ex04"
+author: "Sherinah Rashid"
+date: '5 May 2023'
+date-modified: "`r Sys.Date()`"
+editor: visual
+execute: 
+  freeze: auto
+  warning: false
+  #echo: false
+  #message: false
+  html:
+    code-fold: True
+    code-overflow: scroll
+    code-summary: "Show the code"
+    code-line-numbers: true
+---
+
+In today's in class exercise, Prof shared with us how to combine a qqplot and tabular results of Shapiro test in a single plot.
+
+## Import libraries
+
+The new libraries used today are :
+
+-   [rstatic](https://rpkgs.datanovia.com/rstatix/): Allows us to perform basic statistical tests, including t-test, Wilcoxon test, ANOVA, Kruskal-Wallis and correlation analyses.
+
+-   [gt()](https://gt.rstudio.com/) : starting from a tibble table, customise a table and export in various formats. Most importantly, it works with patch. We will save the tabular results from shapiro test as gt object and export using gtsave() into .png file later.
+
+    Note:
+
+-   Importing tidyverse: will automatically provide read_r() \<- for read_csv()
+
+```{r}
+pacman::p_load(rstatix, gt, patchwork,tidyverse,nortest,webshot2)
+```
+
+```{r}
+exam <- read_csv('data/Exam_data.csv')
+```
+
+## Background info
+
+### The Anderson_darling test
+
+Usually, when we check for normality of a distribution, we can use the Anderson-darling test or the Shapiro test. Hitting the three commands below will give us the results, but no visualisation.
+
+```{r}
+ad.test(exam$ENGLISH)
+```
+
+### The shapiro.test
+
+Using shapiro.test will generate result as a HTML object.
+
+```{r}
+shapiro.test(exam$ENGLISH)
+```
+
+Using shapiro_test will generate result as a tibble object.
+
+```{r}
+exam %>% 
+  shapiro_test(ENGLISH)
+```
+
+### QQplot
+
+We can also generate the qqplot to check for normality. However qqplot does not print any p-values.
+
+```{r}
+ggplot(exam,
+       aes(sample=ENGLISH)) +  #<<< use a new argument call sample: el scores
+  stat_qq() +
+  stat_qq_line()
+```
+
+## Task for today:
+
+### Combine qqplot with results from Shapiro-test.
+
+Recall that in hands-on 3, we use DT to create an interactive table , however it is not recognized by patchwork.
+
+We start by storing the shapiro test in a tibble table as shown above. Then we will use the [gt()](https://gt.rstudio.com/) package and export it as a .png using gtsave().
+
+```{r}
+#| fig-width: 6
+#| fig-height: 4
+
+qq <- ggplot(exam,
+       aes(sample=ENGLISH)) +  #<<< use a new argument call sample: el scores
+  stat_qq() +
+  stat_qq_line()
+
+sw_t <- exam %>% 
+  shapiro_test(ENGLISH) %>% gt()   #<<< make into a gt format (will give a nice table)  shapiro.test is not used here as it gives output in another format.
+
+tmp <- tempfile(fileext = '.png') # create  temp table
+gtsave(sw_t, tmp)  # use gtsave() to save sw_t into tmp folder
+table_png <- png::readPNG(tmp, native = TRUE)
+
+qq+table_png
+
+```
+
+I tried to customise the gt() table.
+
+```{r}
+#| fig-width: 6
+#| fig-height: 4
+
+qq <- ggplot(exam,
+       aes(sample=ENGLISH)) +  #<<< use a new argument call sample: el scores
+  stat_qq() +
+  stat_qq_line()
+
+sw_t <- exam %>% 
+  shapiro_test(ENGLISH) %>% gt()  %>%  
+  tab_header(
+    title = 'Shapiro Test for Normality',
+    subtitle = 'English scores')
+
+tmp <- tempfile(fileext = '.png') # create  temp table
+gtsave(sw_t, tmp)  # use gtsave() to save sw_t into tmp folder
+table_png <- png::readPNG(tmp, native = TRUE)
+
+qq+table_png  # use patchwork to stitch
+```
+
+The results of the Shapiro test shows that p-value \< 0.05 and we have enough statistical evidence to reject the null hypothesis and conclude that English scores do not follow normal distribution.
