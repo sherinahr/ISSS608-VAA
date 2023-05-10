@@ -2,6 +2,9 @@
 title: "Take-Home_Ex01"
 author: "Sherinah Rashid"
 tbl-cap-location: top
+highlight-style: breeze
+code-block-bg: true
+code-block-border-left: "#18661c"
 ---
 
 ## **1. Overview**
@@ -12,13 +15,9 @@ City of Engagement, with a total population of 50,000, is a small city located a
 
 This take-home exercise will explore the demographic and financial characteristics of the city of Engagement using static and interactive statistical graphics methods. The data will be processed using the [tidyverse](https://www.tidyverse.org/) family of packages and the visualisations developed using [ggplot2](https://ggplot2.tidyverse.org/index.html) and its extensions.
 
-Specifically, this exercise seeks to fulfill the following objectives:
+Specifically, this exercise seeks to fulfill the following objectives using Exploratory & Confirmatory Data Analysis:
 
--   Provide an understanding of the demographics of the City of Engagement;
-
--   Explore the factors influencing joviality index;
-
--   Examine the relationship between income and cost of living; and
+-   Explore the factors influencing joviality index and
 
 -   Explore the factors influencing income.
 
@@ -84,7 +83,9 @@ There are a few data quality issues with the datasets:
 
 4.  The data is on an individual level and thus will be aggregated accordingly for the analyses.
 
-5.  After addressing the above issues, the datasets will be combined to ensure a comprehensive and accurate analysis.
+5.  The data types have to be checked as well.
+
+6.  After addressing the above issues, the datasets should be combined to ensure a comprehensive and accurate analysis.
 
 ## **2. Data Preparation**
 
@@ -94,7 +95,7 @@ In this exercise, the following packages will be used: tidyverse, ggplot2, dplyr
 
 ```{r}
 pacman::p_load(ggrepel, patchwork, ggplot2, dplyr,
-               ggthemes, hrbrthemes, zoo, knitr,
+               ggthemes, hrbrthemes, zoo, DT,
                tidyverse) 
 ```
 
@@ -107,16 +108,16 @@ ppt <-read_csv("data/Participants.csv", show_col_types = FALSE)
 fj <- read_csv("data/FinancialJournal.csv", show_col_types = FALSE)
 ```
 
-The summary function is used to provide an overview of the datasets.
+The summary and spec() function is used to provide an overview of the central tendencies, and data types of the datasets.
 
 ```{r}
-#| eval: true
 summary(ppt)
+spec(ppt)
 ```
 
 ```{r}
-#| eval: true
 summary(fj)
+spec(fj)
 ```
 
 ### **2.3 Data Wrangling**
@@ -126,6 +127,8 @@ summary(fj)
 Firstly, the age variable is binned with the following code chunk. The mutate() function of dplyr is used to create a new variable called Age_Category while preserving the existing variable of age.
 
 ```{r}
+#| output: false
+
 ppt <- ppt %>%
   mutate(Age_Category=cut(age, 
                           breaks=c(17, 20, 30, 40, 50, 60),
@@ -138,25 +141,32 @@ head(ppt$Age_Category)
 
 ```
 
-The other change is to make the field "haveKids" clearer. Currently, it reflects the boolean values of True/False. To ensure clarity and better understanding of our subsequent charts, the values will be changed to Yes/No, as reflected in the below code chunk. As above, the mutate() function will be used to create a new variable called Have_Kids.
+Next, a few of the columns were not set to the appropriate data type. For example, participantID should be categorical but it shows as a continuous numeric variable. Further, we would need the education level to be read as an ordinal factor as there are levels for education. As above, the mutate() function will be used to update the data types.
 
 ```{r}
-ppt<-ppt %>%
-  mutate(Have_Kids = case_when(haveKids==TRUE ~ "Yes", haveKids==FALSE ~ "No"))
+#| output: false
 
-# Check if the changes are reflected correctly
-head(ppt$Have_Kids)
+ppt <- ppt %>% mutate(participantId = as.factor(participantId))
+ppt <- ppt %>% mutate(educationLevel = factor(educationLevel, 
+                                              levels=c("Low", "HighSchoolOrCollege", "Bachelors", "Graduate")))
+
+# Check data types
+str(ppt)
+
 ```
 
 Lastly, we will rename the other columns for nicer formatting and ease of reading with the below code chunk. As we are not making changes to the values, the column names will be amended in place.
 
 ```{r}
+#| output: false
+
 ppt <- ppt %>%
-  rename('Participant_ID' = 'participantId', 
-         'Household_Size' = 'householdSize', 
-         'Education_Level' = 'educationLevel', 
-         'Interest_Group' = 'interestGroup', 
-         'Joviality' = 'joviality')
+  rename('ParticipantID' = 'participantId', 
+         'HouseholdSize' = 'householdSize', 
+         'EducationLevel' = 'educationLevel', 
+         'InterestGroup' = 'interestGroup', 
+         'Joviality' = 'joviality',
+         'HaveKids' = 'haveKids')
 
 # Check if the changes are reflected correctly
 colnames(ppt)
@@ -165,17 +175,28 @@ colnames(ppt)
 
 #### **2.3.2 FinancialJournal Dataset**
 
-As stated in section 1.2.3 Challenges, there are a number of issues with the dataset. 
+As stated in section 1.2.3 Challenges, there are a number of issues with the dataset.
 
-Firstly, there are some duplicate rows in the dataset which have to be removed using the distinct() function. As the code below shows, there were 1,113 duplicate rows in the FinancialJournal dataset.
+Firstly, the data type for participantId was changed as above.
 
+```{r}
+#| output: false
+
+fj <- fj %>% mutate(participantId = as.factor(participantId))
+
+# Check data types
+str(fj)
+
+```
+
+Next, there are some duplicate rows in the dataset which have to be removed using the distinct() function. As the code below shows, there were 1,113 duplicate rows in the FinancialJournal dataset.
 
 ```{r}
 fj_2 <- fj %>% distinct()
 nrow(fj) - nrow(fj_2)
 ```
 
-Next, there were some participants who did not have entries for all 6 months. To find the these participants, first the data was grouped by the Participant_ID. Examination of the results show that there are 131 participants which have lower than 1,000 transactions. 
+Next, there were some participants who did not have entries for all 6 months. To find the these participants, first the data was grouped by the participantId. Examination of the results show that there are 131 participants which have lower than 1,000 transactions.
 
 ```{r}
 #| output: false
@@ -184,29 +205,32 @@ fj_2 %>%
   group_by(participantId) %>%
   summarize(transaction_count = n()) %>%
   arrange(transaction_count)
-
 ```
 
-The code chunk below will filter out these 131 participants and tell us how many rows were removed. The data frame fj_final now has no duplicates, and only residents who still live in City of Engagement.
+The code chunk below will filter out these 131 participants. The data frame fj_final now has no duplicates, and only residents who still live in City of Engagement.
 
 ```{r}
 #| output: false
 fj_final <- subset(fj_2, with(fj_2, participantId %in% 
                             names(which(table(participantId)>=1000))))
-
-```
-
-Next, we would want to convert all of the timestamp data into Month-Year format for ease of comparison using the code chunk below. 
-
-```{r}
-fj_final <- fj_final %>%
-  mutate (Year_month = as.yearmon(timestamp)) 
-
 head(fj_final)
 ```
 
-Further, most of the values are negative as they reflect expenditures for food, education, recreation and shelter. The positive amounts are for wage and [rent adjustment](https://www.lawinsider.com/dictionary/rent-adjustment-amount). The data will also be changed from long to wide format for easier reading using the pivot_wider() function. 
+Next, we would want to convert all of the timestamp data into Month-Year format for ease of comparison using the first line of code. However, the result would be in character format which is not advisable for analysis, and so we will run the subsequent line of code to change it to Date format.
 
+```{r}
+
+fj_final <- fj_final %>%
+  mutate (Year_month = as.yearmon(timestamp))
+
+fj_final <- transform(fj_final, Year_month = as.Date(Year_month, frac = 0))
+
+head(fj_final)
+
+
+```
+
+Further, most of the values are negative as they reflect expenditures for food, education, recreation and shelter. The positive amounts are for wage and [rent adjustment](https://www.lawinsider.com/dictionary/rent-adjustment-amount). The data will also be changed from long to wide format for easier reading using the pivot_wider() function.
 
 ```{r}
 #| output: false
@@ -214,15 +238,15 @@ Further, most of the values are negative as they reflect expenditures for food, 
 fj_final$amount <- abs(fj_final$amount)
 fj_final$amount <- round(fj_final$amount,digits=0)
 
-fj_final_by_year <- fj_final %>%
-  group_by(participantId, category,Year_month) %>%
-  summarise(Total = sum(amount))
-
-fj_final_by_year <- pivot_wider(
-  fj_final_by_year,names_from = category,values_from =Total)
+fj_wide <- fj_final %>%
+  group_by(participantId, Year_month, category) %>%
+  summarise(Total = sum(amount)) %>%
+  pivot_wider(names_from = category, values_from = Total)
 
 # Replace NA values with 0 for Rent Adjustment
-fj_final_by_year[is.na(fj_final_by_year)] <- 0
+fj_wide[is.na(fj_wide)] <- 0
+
+head(fj_wide)
 
 ```
 
@@ -230,22 +254,33 @@ To find out the cost of living and total income of the residents, the values of 
 
 ```{r}
 
-fj_final_by_year$Cost_of_living <- fj_final_by_year$Education + 
-  fj_final_by_year$Food + fj_final_by_year$Recreation + 
-  fj_final_by_year$Shelter
+fj_wide$Cost_of_living <- fj_wide$Education + 
+  fj_wide$Food + fj_wide$Recreation + 
+  fj_wide$Shelter
 
-fj_final_by_year$Total_Income <- fj_final_by_year$Wage + 
-  fj_final_by_year$RentAdjustment
+fj_wide$Total_Income <- fj_wide$Wage + 
+  fj_wide$RentAdjustment
 
-fj_final_by_year$Total_Savings <- fj_final_by_year$Total_Income - fj_final_by_year$Cost_of_living
-
-head(fj_final_by_year)
+fj_wide$Total_Savings <- fj_wide$Total_Income - fj_wide$Cost_of_living
 
 ```
 
+Lastly, we will rename the participantId column in place for consistency.
+
+```{r}
+#| output: false
+
+fj_wide <- fj_wide %>%
+  rename('ParticipantID' = 'participantId')
+
+# Check if the changes are reflected correctly
+colnames(fj_wide)
+
+```
 
 #### **2.3.3 Combining the Datasets**
 
+DT::datatable(fj_wide, class = "compact")
 
 ## **3. Visualisations & Insights**
 

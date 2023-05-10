@@ -261,11 +261,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3 class="anchored" data-anchor-id="introduction"><strong>1.1 Introduction</strong></h3>
 <p>City of Engagement, with a total population of 50,000, is a small city located at Country of Nowhere. The city serves as a service centre of an agriculture region surrounding the city. The main agriculture of the region is fruit farms and vineyards. The local council of the city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns, among other things. The city aims to use the data to assist with their major community revitalization efforts, including how to allocate a very large city renewal grant they have recently received.</p>
 <p>This take-home exercise will explore the demographic and financial characteristics of the city of Engagement using static and interactive statistical graphics methods. The data will be processed using the <a href="https://www.tidyverse.org/">tidyverse</a> family of packages and the visualisations developed using <a href="https://ggplot2.tidyverse.org/index.html">ggplot2</a> and its extensions.</p>
-<p>Specifically, this exercise seeks to fulfill the following objectives:</p>
+<p>Specifically, this exercise seeks to fulfill the following objectives using Exploratory &amp; Confirmatory Data Analysis:</p>
 <ul>
-<li><p>Provide an understanding of the demographics of the City of Engagement;</p></li>
-<li><p>Explore the factors influencing joviality index;</p></li>
-<li><p>Examine the relationship between income and cost of living; and</p></li>
+<li><p>Explore the factors influencing joviality index and</p></li>
 <li><p>Explore the factors influencing income.</p></li>
 </ul>
 </section>
@@ -366,7 +364,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><p>A quick analysis showed that there were duplicates in the data; these will be removed to ensure the data will not be skewed.</p></li>
 <li><p>The quick analysis also highlighted that there were some participants who did not have entries for all 6 months; it is possible that they are no longer residents of the City. Since the aim of this exercise is to explore the financial trends of the residents, these participants will be removed.</p></li>
 <li><p>The data is on an individual level and thus will be aggregated accordingly for the analyses.</p></li>
-<li><p>After addressing the above issues, the datasets will be combined to ensure a comprehensive and accurate analysis.</p></li>
+<li><p>The data types have to be checked as well.</p></li>
+<li><p>After addressing the above issues, the datasets should be combined to ensure a comprehensive and accurate analysis.</p></li>
 </ol>
 </section>
 </section>
@@ -378,7 +377,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>In this exercise, the following packages will be used: tidyverse, ggplot2, dplyr, patchwork, ggthemes, hrbrthemes, and ggrepel. The codechunk below will be used to check if these packages have been installed and also will load them onto the working R environment:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(ggrepel, patchwork, ggplot2, dplyr,</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>               ggthemes, hrbrthemes, zoo, knitr,</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>               ggthemes, hrbrthemes, zoo, DT,</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>               tidyverse) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -389,7 +388,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ppt <span class="ot">&lt;-</span><span class="fu">read_csv</span>(<span class="st">"data/Participants.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>fj <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/FinancialJournal.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The summary function is used to provide an overview of the datasets.</p>
+<p>The summary and spec() function is used to provide an overview of the central tendencies, and data types of the datasets.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ppt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -408,9 +407,21 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
                                        3rd Qu.:0.746819  
                                        Max.   :0.999234  </code></pre>
 </div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span>(ppt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>cols(
+  participantId = col_double(),
+  householdSize = col_double(),
+  haveKids = col_logical(),
+  age = col_double(),
+  educationLevel = col_character(),
+  interestGroup = col_character(),
+  joviality = col_double()
+)</code></pre>
+</div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> participantId      timestamp                        category        
  Min.   :   0.0   Min.   :2022-03-01 00:00:00.00   Length:1513636    
@@ -427,6 +438,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
  3rd Qu.:   21.598  
  Max.   : 4096.526  </code></pre>
 </div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span>(fj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>cols(
+  participantId = col_double(),
+  timestamp = col_datetime(format = ""),
+  category = col_character(),
+  amount = col_double()
+)</code></pre>
+</div>
 </div>
 </section>
 <section id="data-wrangling" class="level3">
@@ -435,56 +455,49 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h4 class="anchored" data-anchor-id="participants-dataset-1"><strong>2.3.1 Participants Dataset</strong></h4>
 <p>Firstly, the age variable is binned with the following code chunk. The mutate() function of dplyr is used to create a new variable called Age_Category while preserving the existing variable of age.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ppt <span class="ot">&lt;-</span> ppt <span class="sc">%&gt;%</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Age_Category=</span><span class="fu">cut</span>(age, </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">breaks=</span><span class="fu">c</span>(<span class="dv">17</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>, <span class="dv">50</span>, <span class="dv">60</span>),</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">labels=</span><span class="fu">c</span>(<span class="st">'20 &amp; Below'</span>, <span class="st">'21-30'</span>, <span class="st">'31-40'</span>, </span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                                   <span class="st">'41-50'</span>, <span class="st">'51 and above'</span>)))</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if the ages are reflected correctly</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ppt<span class="sc">$</span>age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 36 25 35 21 43 32</code></pre>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ppt <span class="ot">&lt;-</span> ppt <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Age_Category=</span><span class="fu">cut</span>(age, </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">breaks=</span><span class="fu">c</span>(<span class="dv">17</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>, <span class="dv">50</span>, <span class="dv">60</span>),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">labels=</span><span class="fu">c</span>(<span class="st">'20 &amp; Below'</span>, <span class="st">'21-30'</span>, <span class="st">'31-40'</span>, </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                                   <span class="st">'41-50'</span>, <span class="st">'51 and above'</span>)))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if the ages are reflected correctly</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ppt<span class="sc">$</span>age)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ppt<span class="sc">$</span>Age_Category)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ppt<span class="sc">$</span>Age_Category)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 31-40 21-30 31-40 21-30 41-50 31-40
-Levels: 20 &amp; Below 21-30 31-40 41-50 51 and above</code></pre>
-</div>
-</div>
-<p>The other change is to make the field “haveKids” clearer. Currently, it reflects the boolean values of True/False. To ensure clarity and better understanding of our subsequent charts, the values will be changed to Yes/No, as reflected in the below code chunk. As above, the mutate() function will be used to create a new variable called Have_Kids.</p>
+<p>Next, a few of the columns were not set to the appropriate data type. For example, participantID should be categorical but it shows as a continuous numeric variable. Further, we would need the education level to be read as an ordinal factor as there are levels for education. As above, the mutate() function will be used to update the data types.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ppt<span class="ot">&lt;-</span>ppt <span class="sc">%&gt;%</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Have_Kids =</span> <span class="fu">case_when</span>(haveKids<span class="sc">==</span><span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Yes"</span>, haveKids<span class="sc">==</span><span class="cn">FALSE</span> <span class="sc">~</span> <span class="st">"No"</span>))</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if the changes are reflected correctly</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ppt<span class="sc">$</span>Have_Kids)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "Yes" "Yes" "Yes" "Yes" "Yes" "Yes"</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ppt <span class="ot">&lt;-</span> ppt <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">participantId =</span> <span class="fu">as.factor</span>(participantId))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>ppt <span class="ot">&lt;-</span> ppt <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">educationLevel =</span> <span class="fu">factor</span>(educationLevel, <span class="at">levels=</span><span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"HighSchoolOrCollege"</span>, <span class="st">"Bachelors"</span>, <span class="st">"Graduate"</span>)))</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check data types</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(ppt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Lastly, we will rename the other columns for nicer formatting and ease of reading with the below code chunk. As we are not making changes to the values, the column names will be amended in place.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ppt <span class="ot">&lt;-</span> ppt <span class="sc">%&gt;%</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">'Participant_ID'</span> <span class="ot">=</span> <span class="st">'participantId'</span>, </span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">'Household_Size'</span> <span class="ot">=</span> <span class="st">'householdSize'</span>, </span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">'Education_Level'</span> <span class="ot">=</span> <span class="st">'educationLevel'</span>, </span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">'Interest_Group'</span> <span class="ot">=</span> <span class="st">'interestGroup'</span>, </span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>         <span class="st">'Joviality'</span> <span class="ot">=</span> <span class="st">'joviality'</span>)</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if the changes are reflected correctly</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(ppt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "Participant_ID"  "Household_Size"  "haveKids"        "age"            
-[5] "Education_Level" "Interest_Group"  "Joviality"       "Age_Category"   
-[9] "Have_Kids"      </code></pre>
-</div>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">'ParticipantID'</span> <span class="ot">=</span> <span class="st">'participantId'</span>, </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">'HouseholdSize'</span> <span class="ot">=</span> <span class="st">'householdSize'</span>, </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">'EducationLevel'</span> <span class="ot">=</span> <span class="st">'educationLevel'</span>, </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">'InterestGroup'</span> <span class="ot">=</span> <span class="st">'interestGroup'</span>, </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>         <span class="st">'Joviality'</span> <span class="ot">=</span> <span class="st">'joviality'</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>         <span class="st">'HaveKids'</span> <span class="ot">=</span> <span class="st">'haveKids'</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if the changes are reflected correctly</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(ppt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="financialjournal-dataset-1" class="level4">
 <h4 class="anchored" data-anchor-id="financialjournal-dataset-1"><strong>2.3.2 FinancialJournal Dataset</strong></h4>
 <p>As stated in section 1.2.3 Challenges, there are a number of issues with the dataset.</p>
-<p>Firstly, there are some duplicate rows in the dataset which have to be removed using the distinct() function. As the code below shows, there were 1,113 duplicate rows in the FinancialJournal dataset.</p>
+<p>Firstly, the data type for participantId was changed as above.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>fj <span class="ot">&lt;-</span> fj <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">participantId =</span> <span class="fu">as.factor</span>(participantId))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check data types</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(fj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, there are some duplicate rows in the dataset which have to be removed using the distinct() function. As the code below shows, there were 1,113 duplicate rows in the FinancialJournal dataset.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>fj_2 <span class="ot">&lt;-</span> fj <span class="sc">%&gt;%</span> <span class="fu">distinct</span>()</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(fj) <span class="sc">-</span> <span class="fu">nrow</span>(fj_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -492,34 +505,35 @@ Levels: 20 &amp; Below 21-30 31-40 41-50 51 and above</code></pre>
 <pre><code>[1] 1113</code></pre>
 </div>
 </div>
-<p>Next, there were some participants who did not have entries for all 6 months. To find the these participants, first the data was grouped by the Participant_ID. Examination of the results show that there are 131 participants which have lower than 1,000 transactions.</p>
+<p>Next, there were some participants who did not have entries for all 6 months. To find the these participants, first the data was grouped by the participantId. Examination of the results show that there are 131 participants which have lower than 1,000 transactions.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fj_2 <span class="sc">%&gt;%</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(participantId) <span class="sc">%&gt;%</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">transaction_count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(transaction_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The code chunk below will filter out these 131 participants and tell us how many rows were removed. The data frame fj_final now has no duplicates, and only residents who still live in City of Engagement.</p>
+<p>The code chunk below will filter out these 131 participants. The data frame fj_final now has no duplicates, and only residents who still live in City of Engagement.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fj_final <span class="ot">&lt;-</span> <span class="fu">subset</span>(fj_2, <span class="fu">with</span>(fj_2, participantId <span class="sc">%in%</span> </span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">names</span>(<span class="fu">which</span>(<span class="fu">table</span>(participantId)<span class="sc">&gt;=</span><span class="dv">1000</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">names</span>(<span class="fu">which</span>(<span class="fu">table</span>(participantId)<span class="sc">&gt;=</span><span class="dv">1000</span>))))</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(fj_final)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Next, we would want to convert all of the timestamp data into Month-Year format for ease of comparison using the code chunk below.</p>
+<p>Next, we would want to convert all of the timestamp data into Month-Year format for ease of comparison using the first line of code. However, the result would be in character format which is not advisable for analysis, and so we will run the subsequent line of code to change it to Date format.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>fj_final <span class="ot">&lt;-</span> fj_final <span class="sc">%&gt;%</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> (<span class="at">Year_month =</span> <span class="fu">as.yearmon</span>(timestamp)) </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> (<span class="at">Year_month =</span> <span class="fu">as.yearmon</span>(timestamp))</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(fj_final)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>fj_final <span class="ot">&lt;-</span> <span class="fu">transform</span>(fj_final, <span class="at">Year_month =</span> <span class="fu">as.Date</span>(Year_month, <span class="at">frac =</span> <span class="dv">0</span>))</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(fj_final)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 5
-  participantId timestamp           category  amount Year_month
-          &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt;      &lt;dbl&gt; &lt;yearmon&gt; 
-1             0 2022-03-01 00:00:00 Wage      2473.  Mar 2022  
-2             0 2022-03-01 00:00:00 Shelter   -555.  Mar 2022  
-3             0 2022-03-01 00:00:00 Education  -38.0 Mar 2022  
-4             1 2022-03-01 00:00:00 Wage      2047.  Mar 2022  
-5             1 2022-03-01 00:00:00 Shelter   -555.  Mar 2022  
-6             1 2022-03-01 00:00:00 Education  -38.0 Mar 2022  </code></pre>
+<pre><code>  participantId  timestamp  category     amount Year_month
+1             0 2022-03-01      Wage 2472.50756 2022-03-01
+2             0 2022-03-01   Shelter -554.98862 2022-03-01
+3             0 2022-03-01 Education  -38.00538 2022-03-01
+4             1 2022-03-01      Wage 2046.56221 2022-03-01
+5             1 2022-03-01   Shelter -554.98862 2022-03-01
+6             1 2022-03-01 Education  -38.00538 2022-03-01</code></pre>
 </div>
 </div>
 <p>Further, most of the values are negative as they reflect expenditures for food, education, recreation and shelter. The positive amounts are for wage and <a href="https://www.lawinsider.com/dictionary/rent-adjustment-amount">rent adjustment</a>. The data will also be changed from long to wide format for easier reading using the pivot_wider() function.</p>
@@ -527,46 +541,39 @@ Levels: 20 &amp; Below 21-30 31-40 41-50 51 and above</code></pre>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fj_final<span class="sc">$</span>amount <span class="ot">&lt;-</span> <span class="fu">abs</span>(fj_final<span class="sc">$</span>amount)</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>fj_final<span class="sc">$</span>amount <span class="ot">&lt;-</span> <span class="fu">round</span>(fj_final<span class="sc">$</span>amount,<span class="at">digits=</span><span class="dv">0</span>)</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>fj_final_by_year <span class="ot">&lt;-</span> fj_final <span class="sc">%&gt;%</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(participantId, category,Year_month) <span class="sc">%&gt;%</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Total =</span> <span class="fu">sum</span>(amount))</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>fj_final_by_year <span class="ot">&lt;-</span> <span class="fu">pivot_wider</span>(</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  fj_final_by_year,<span class="at">names_from =</span> category,<span class="at">values_from =</span>Total)</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace NA values with 0 for Rent Adjustment</span></span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>fj_final_by_year[<span class="fu">is.na</span>(fj_final_by_year)] <span class="ot">&lt;-</span> <span class="dv">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>fj_wide <span class="ot">&lt;-</span> fj_final <span class="sc">%&gt;%</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(participantId, Year_month, category) <span class="sc">%&gt;%</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Total =</span> <span class="fu">sum</span>(amount)) <span class="sc">%&gt;%</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> category, <span class="at">values_from =</span> Total)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace NA values with 0 for Rent Adjustment</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>fj_wide[<span class="fu">is.na</span>(fj_wide)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(fj_wide)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To find out the cost of living and total income of the residents, the values of the expenses for the four categories, and the wage and rent adjustment will be summed up respectively. We will also derive the total savings i.e.&nbsp;Total income - Cost of living.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fj_final_by_year<span class="sc">$</span>Cost_of_living <span class="ot">&lt;-</span> fj_final_by_year<span class="sc">$</span>Education <span class="sc">+</span> </span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  fj_final_by_year<span class="sc">$</span>Food <span class="sc">+</span> fj_final_by_year<span class="sc">$</span>Recreation <span class="sc">+</span> </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  fj_final_by_year<span class="sc">$</span>Shelter</span>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fj_wide<span class="sc">$</span>Cost_of_living <span class="ot">&lt;-</span> fj_wide<span class="sc">$</span>Education <span class="sc">+</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  fj_wide<span class="sc">$</span>Food <span class="sc">+</span> fj_wide<span class="sc">$</span>Recreation <span class="sc">+</span> </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  fj_wide<span class="sc">$</span>Shelter</span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>fj_final_by_year<span class="sc">$</span>Total_Income <span class="ot">&lt;-</span> fj_final_by_year<span class="sc">$</span>Wage <span class="sc">+</span> </span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  fj_final_by_year<span class="sc">$</span>RentAdjustment</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>fj_wide<span class="sc">$</span>Total_Income <span class="ot">&lt;-</span> fj_wide<span class="sc">$</span>Wage <span class="sc">+</span> </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  fj_wide<span class="sc">$</span>RentAdjustment</span>
 <span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>fj_final_by_year<span class="sc">$</span>Total_Savings <span class="ot">&lt;-</span> fj_final_by_year<span class="sc">$</span>Total_Income <span class="sc">-</span> fj_final_by_year<span class="sc">$</span>Cost_of_living</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(fj_final_by_year)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 11
-# Groups:   participantId [1]
-  participantId Year_month Education  Food Recreation Shelter  Wage
-          &lt;dbl&gt; &lt;yearmon&gt;      &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
-1             0 Mar 2022          38   269        348     555 11926
-2             0 Apr 2022          38   269        219     555  8631
-3             0 May 2022          38   264        384     555  9042
-4             0 Jun 2022          38   257        466     555  9042
-5             0 Jul 2022          38   270       1069     555  8631
-6             0 Aug 2022          38   260        313     555  9453
-# ℹ 4 more variables: RentAdjustment &lt;dbl&gt;, Cost_of_living &lt;dbl&gt;,
-#   Total_Income &lt;dbl&gt;, Total_Savings &lt;dbl&gt;</code></pre>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>fj_wide<span class="sc">$</span>Total_Savings <span class="ot">&lt;-</span> fj_wide<span class="sc">$</span>Total_Income <span class="sc">-</span> fj_wide<span class="sc">$</span>Cost_of_living</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Lastly, we will rename the participantId column in place for consistency.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fj_wide <span class="ot">&lt;-</span> fj_wide <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">'ParticipantID'</span> <span class="ot">=</span> <span class="st">'participantId'</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if the changes are reflected correctly</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(fj_wide)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="combining-the-datasets" class="level4">
 <h4 class="anchored" data-anchor-id="combining-the-datasets"><strong>2.3.3 Combining the Datasets</strong></h4>
+<p>DT::datatable(fj_wide, class = “compact”)</p>
 </section>
 </section>
 </section>
