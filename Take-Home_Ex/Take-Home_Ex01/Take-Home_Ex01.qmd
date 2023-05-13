@@ -1,5 +1,5 @@
 ---
-title: "Demographics & Financial Analysis of City of Engagement"
+title: "Demographic & Financial Analysis of City of Engagement"
 author: "Sherinah Rashid"
 tbl-cap-location: top
 highlight-style: breeze
@@ -15,9 +15,10 @@ execute:
   eval: true
   echo: true
   warning: false
+  freeze: auto
 ---
 
-## **1. Overview**
+## **Overview**
 
 ### **1.1 Introduction**
 
@@ -97,7 +98,11 @@ There are a few data quality issues with the datasets:
 
 6.  After addressing the above issues, the datasets should be combined to ensure a comprehensive and accurate analysis.
 
-## **2. Data Preparation**
+::: callout-important
+It is important to ensure that the datasets have been comprehensively cleaned prior to conducting analyses, to ensure our visualisations are accurate and informative!
+:::
+
+## **Data Preparation**
 
 ### **2.1 Install and Launch R packages**
 
@@ -133,6 +138,8 @@ spec(fj)
 ### **2.3 Data Wrangling**
 
 #### **2.3.1 Participants Dataset**
+
+There are a few data quality issues:
 
 Firstly, the age variable is binned with the following code chunk. The mutate() function of dplyr is used to create a new variable called Age_Category while preserving the existing variable of age.
 
@@ -237,7 +244,6 @@ fj_final <- transform(fj_final, Year_month = as.Date(Year_month, frac = 0))
 
 head(fj_final)
 
-
 ```
 
 Further, most of the values are negative as they reflect expenditures for food, education, recreation and shelter. The positive amounts are for wage and [rent adjustment](https://www.lawinsider.com/dictionary/rent-adjustment-amount). The data will also be changed from long to wide format for easier reading using the pivot_wider() function.
@@ -290,8 +296,166 @@ colnames(fj_wide)
 
 #### **2.3.3 Combining the Datasets**
 
-DT::datatable(fj_wide, class = "compact")
+Now that data cleaning is done, let's merge the datasets! We need to ensure that for the participants.csv, we only keep the distinct participants that were in our fj_wide csv. Let's see what the final dataset looks like with the following code chunk.
 
-## **3. Visualisations & Insights**
+```{r}
+
+merged <- merge(fj_wide, ppt, by = "ParticipantID", all.x = TRUE)
+
+final <- subset(merged, ParticipantID %in% fj_wide$ParticipantID)
+
+DT::datatable(final, class = "compact")
+
+```
+
+## **Visualisation**
+
+## **3. What influences Joviality?**
+
+In this section, we will first take a quick look at the demographic profile of the residents. Simple visualisations which show the distributions will be used, such as pie, line, and bar charts. Based on these, we will conduct confirmatory data analyses.
+
+### **3.1. Age & Education**
+
+The adult residents (aged 21 and above) are quite evenly distributed in the City. As for education level, almost half (48%) of the residents had at least high school or college education, and 45% had at least a Bachelor's degree. 
+
+::: panel-tabset
+### Plot
+
+```{r}
+#| echo: false 
+
+#Calculate the proportion of residents in each category
+age_category_proportion <- final %>%
+  count(Age_Category) %>%
+  mutate(prop = n/sum(n))
+
+#Plot the pie chart for Age Category
+p1 <- ggplot(age_category_proportion, aes(x="", y=prop, fill=Age_Category)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  geom_text(aes(label = paste0(round(prop*100), "%")), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_brewer(palette="Pastel2") +
+  ggtitle("Distribution of Age (%)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(fill ="Age Category")
+
+#Calculate the proportion of residents in each category
+education_proportion <- final %>%
+  count(EducationLevel) %>%
+  mutate(prop = n/sum(n))
+
+#Plot the pie chart for Education level
+p2 <- ggplot(education_proportion, aes(x="", y=prop, fill=EducationLevel)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  geom_text(aes(label = paste0(round(prop*100), "%")), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_brewer(palette="Pastel2") +
+  ggtitle("Distribution of Education Level (%)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(fill ="Education Level")
+  
+(p1+p2)
+```
+
+### Code
+
+```{r}
+#| eval: false
+
+#Calculate the proportion of residents in each category
+age_category_proportion <- final %>%
+  count(Age_Category) %>%
+  mutate(prop = n/sum(n))
+
+#Plot the pie chart for Age Category
+p1 <- ggplot(age_category_proportion, aes(x="", y=prop, fill=Age_Category)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  geom_text(aes(label = paste0(round(prop*100), "%")), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_brewer(palette="Pastel2") +
+  ggtitle("Distribution of Age (%)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(fill ="Age Category")
+
+#Calculate the proportion of residents in each category
+education_proportion <- final %>%
+  count(EducationLevel) %>%
+  mutate(prop = n/sum(n))
+
+#Plot the pie chart for Education level
+p2 <- ggplot(education_proportion, aes(x="", y=prop, fill=EducationLevel)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  geom_text(aes(label = paste0(round(prop*100), "%")), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_brewer(palette="Pastel2") +
+  ggtitle("Distribution of Education Level (%)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(fill ="Education Level")
+  
+(p1/p2)
+```
+:::
+
+### **3.2. Household Size and Children**
+
+Residents of the City tend to have nuclear households, with a maximum of 3 members in a household. From the bar chart, we can see that about one-third of the residents have children. 
+
+::: panel-tabset
+### Plot
+
+```{r}
+#| echo: false 
+
+#Plot the bar chart for HHsize Category
+p1 <- ggplot(data = final,
+       aes(x = HouseholdSize, fill = HaveKids)) +
+  geom_bar() +
+  geom_text(aes(label=..count..),
+            stat="count",
+            vjust=1.5,
+            color="black") +
+  theme_classic() +
+  xlab("Household Size (Persons)") +
+  ylab("No. of\nResidents") +
+  ggtitle("Distribution of Household Size") +
+  scale_fill_brewer(palette="Pastel2")
+p1
+```
+
+### Code
+
+```{r}
+#| eval: false
+
+#Plot the bar chart for HHsize Category
+p1 <- ggplot(data = final,
+       aes(x = HouseholdSize, fill = HaveKids)) +
+  geom_bar() +
+  geom_text(aes(label=..count..),
+            stat="count",
+            vjust=1.5,
+            color="black") +
+  theme_classic() +
+  xlab("Household Size (Persons)") +
+  ylab("No. of\nResidents") +
+  ggtitle("Distribution of Households") +
+  scale_fill_brewer(palette="Pastel2")
+p1
+```
+:::
+
+### **3.3. Joviality**
+
+
+
+## **4. What influences income?**
+
+### **4.1. Education and smth**
+
+
 
 ## **4. Key Takeaways**
