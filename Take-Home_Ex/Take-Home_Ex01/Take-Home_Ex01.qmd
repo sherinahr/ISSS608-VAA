@@ -26,9 +26,7 @@ City of Engagement, with a total population of 50,000, is a small city located a
 
 This take-home exercise will explore the demographic and financial characteristics of the city of Engagement using static and interactive statistical graphics methods. The data will be processed using the [tidyverse](https://www.tidyverse.org/) family of packages and the visualisations developed using [ggplot2](https://ggplot2.tidyverse.org/index.html) and its extensions.
 
-Specifically, this exercise seeks to answer the following using Exploratory & Confirmatory Data Analysis:
-
-\[**What influences happiness?**\]{style="color: darkgreen"}
+Specifically, this exercise seeks to answer the following using Exploratory & Confirmatory Data Analysis: **What influences happiness?**
 
 ### **1.2 The Data**
 
@@ -107,9 +105,9 @@ It is important to ensure that the datasets have been comprehensively cleaned pr
 In this exercise, the following packages will be used: tidyverse, ggplot2, dplyr, patchwork, ggthemes, hrbrthemes, and ggrepel. The codechunk below will be used to check if these packages have been installed and also will load them onto the working R environment:
 
 ```{r}
-pacman::p_load(ggrepel, patchwork, ggplot2, dplyr,
-               ggthemes, hrbrthemes, zoo, DT,
-               tidyverse) 
+pacman::p_load(patchwork, ggplot2, dplyr, rstatix, gt,
+               gganimate, gifski, png, zoo, DT, ggjoy,
+               tidyverse, ggstatsplot, plotly) 
 ```
 
 ### **2.2 Import Datasets**
@@ -306,13 +304,11 @@ DT::datatable(final, class = "compact")
 
 ```
 
-## **Visualisation**
+## **Demographic & Financial Profiles**
 
-## **3. What influences Joviality?**
+In this section, we will first take a quick look at the demographic and financial profile of the residents. Simple visualisations which show the distributions will be used, such as pie, line, and bar charts. Based on these, we will conduct confirmatory data analyses to assess what influences happiness.
 
-In this section, we will first take a quick look at the demographic profile of the residents. Simple visualisations which show the distributions will be used, such as pie, line, and bar charts. Based on these, we will conduct confirmatory data analyses.
-
-### **3.1. Age & Education**
+### **3.1. Demographic: Age & Education**
 
 The adult residents (aged 21 and above) are quite evenly distributed in the City. As for education level, almost half (48%) of the residents had at least high school or college education, and 45% had at least a Bachelor's degree.
 
@@ -354,13 +350,14 @@ p2 <- ggplot(education_proportion, aes(x="", y=prop, fill=EducationLevel)) +
   theme(plot.title = element_text(hjust = 0.5)) +
   labs(fill ="Education Level")
   
-(p1+p2)
+p1 / p2
 ```
 
 ### Code
 
 ```{r}
 #| eval: false
+#| code-fold: false
 
 #Calculate the proportion of residents in each category
 age_category_proportion <- final %>%
@@ -394,11 +391,11 @@ p2 <- ggplot(education_proportion, aes(x="", y=prop, fill=EducationLevel)) +
   theme(plot.title = element_text(hjust = 0.5)) +
   labs(fill ="Education Level")
   
-(p1/p2)
+p1 / p2
 ```
 :::
 
-### **3.2. Household Size and Children**
+### **3.2. Demographic: Household Size and Children**
 
 Residents of the City tend to have nuclear households, with a maximum of 3 members in a household. From the pie chart, we can see that about one-third of the residents have children.
 
@@ -449,6 +446,7 @@ p1 / p2
 
 ```{r}
 #| eval: false
+#| code-fold: false
 
 #Calculate proportion of residents in each category
 final$HouseholdSize <- as.factor(final$HouseholdSize)
@@ -488,12 +486,253 @@ p1 / p2
 ```
 :::
 
-### **3.3. Joviality**
+### **3.3. Financial: Distribution of Total Income & Cost of Living** 
 
-One of the aims of this analysis is to see what influences happiness.
+The line charts below show us an overview of the proportion of residents for the total income (as defined by the sum of wages and rent adjustment) and the cost of living. Both distributions are positively skewed i.e., mean is greater than the median. Majority of the residents have a total income of below \$3,000 approximately, and have a cost of living of lower than \$2,000.
 
-## **4. What influences income?**
+::: panel-tabset
+### Plot
 
-### **4.1. Education and smth**
+```{r}
+#| echo: false 
 
-## **4. Key Takeaways**
+#Plot Total Income
+gg1<- ggplot(data=final, 
+       aes(x = Total_Income)) +
+  geom_density(color="turquoise",linewidth=1)+
+  theme_classic() +
+  theme(axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  labs(x= "Total Income",y= "Density",title="Distribution of Total Income") 
+
+#Plot Total Cost of Living
+gg2<- ggplot(data=final, 
+       aes(x = Cost_of_living)) +
+  geom_density(color="skyblue1",linewidth=1)+
+  theme_classic() +
+  theme(axis.text.y=element_blank(), axis.ticks.y=element_blank())+
+  labs(x= "Cost of Living",y= "Density",title="Distribution of Cost of Living") 
+
+gg1 / gg2
+```
+
+### Code
+
+```{r}
+#| eval: false
+#| code-fold: false
+
+#Plot Total Income
+gg1<- ggplot(data=final, 
+       aes(x = Total_Income)) +
+  geom_density(color="turquoise",linewidth=1)+
+  theme_classic() +
+  theme(axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  labs(x= "Wage",y= "Density",title="Distribution of Total Income") 
+
+#Plot Total Cost of Living
+gg2<- ggplot(data=final, 
+       aes(x = Cost_of_living)) +
+  geom_density(color="skyblue1",linewidth=1)+
+  theme_classic() +
+  theme(axis.text.y=element_blank(), axis.ticks.y=element_blank())+
+  labs(x= "Cost of Living",y= "Density",title="Distribution of Cost of Living") 
+
+gg1 / gg2
+```
+:::
+
+Next, let's look at the trend of the total income and cost of living across the months using the animated graph below. We can see that primarily, monthly expenditures were fairly stable across months. As for total income, there was a spike in March 2022, but then returned to baseline amounts thereafter. 
+
+::: panel-tabset
+### Plot
+
+```{r}
+#| echo: false 
+
+#Change the ppt ID to numeric for continuous scale
+p3 <- ggplot(final %>% mutate(ParticipantID = as.numeric(ParticipantID)),
+       aes(x = Total_Income, y = Cost_of_living, 
+           size = Total_Income, 
+           colour = ParticipantID)) +
+  geom_point(alpha = 0.5, 
+             show.legend = FALSE) +
+  scale_color_gradientn(colours = rainbow(100)) +
+  scale_size(range = c(1, 6)) +
+  labs(title = 'Date: {frame_time}', 
+       x = 'Total Income ($)',
+       y = 'Cost of Living ($)') +
+  transition_time(Year_month) +
+  theme_classic() +
+  ease_aes('linear')
+
+#Specify to animate within a specified duration
+ggplotly(p3, duration = 20)
+```
+
+### Code
+
+```{r}
+#| eval: false
+#| code-fold: false
+
+#Change the ppt ID to numeric for continuous scale
+p3 <- ggplot(final %>% mutate(ParticipantID = as.numeric(ParticipantID)),
+       aes(x = Total_Income, y = Cost_of_living, 
+           size = Total_Income, 
+           colour = ParticipantID)) +
+  geom_point(alpha = 0.5, 
+             show.legend = FALSE) +
+  scale_color_gradientn(colours = rainbow(100)) +
+  scale_size(range = c(1, 6)) +
+  labs(title = 'Date: {frame_time}', 
+       x = 'Total Income ($)',
+       y = 'Cost of Living ($)') +
+  transition_time(Year_month) +
+  theme_classic() +
+  ease_aes('linear')
+
+#Specify to animate within a specified duration
+ggplotly(p3, duration = 20)
+```
+:::
+
+
+### **3.4 Financial: Patterns of Cost of Living** 
+
+Now that we have seen the general trend of the total income and expenditures, let's look at the patterns of cost of living. As we need the long format, we will first create a new table called Expenses from the fj_final table so as to isolate the specific expenditure categories. 
+
+```{r}
+#| output: false
+
+#Create a Total column in fj_final and rename the dataframe
+fj_final2 <- fj_final %>%
+  group_by(participantId, Year_month, category) %>%
+  summarise(Total = sum(amount))
+
+#Create a new dataframe just for expenses
+expenses <- fj_final2 %>%
+  filter(category != 'Wage') %>%
+  filter(category != 'RentAdjustment')
+
+#Check the values
+head(expenses)
+
+```
+
+We can see from the boxplot below that most of the monthly expenditure was spent on shelter, followed by recreation, food, and lastly education.
+
+::: panel-tabset
+### Plot
+
+```{r}
+#| echo: false 
+
+ggplot(data = expenses,
+       aes(x = category, y = Total, fill = category))+
+  geom_boxplot() +
+  xlab("Category of Expenditure") +
+  ylab("Amount ($)") +
+  ggtitle("Distribution of Monthly Expenses") +
+  theme_classic() + 
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette="Pastel2") 
+```
+
+### Code
+
+```{r}
+#| eval: false
+#| code-fold: false
+
+ggplot(data = expenses,
+       aes(x = category, y = Total, fill = category))+
+  geom_boxplot() +
+  xlab("Category of Expenditure") +
+  ylab("Amount ($)") +
+  ggtitle("Distribution of Monthly Expenses") +
+  theme_classic() + 
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette="Pastel2") 
+```
+:::
+
+## **What influences Happiness?**
+
+### **3.5. Joviality**
+
+Now that we have finished exploring the demographic and financial characteristics, let's plot the distribution of joviality and assess if it meets the normality assumption. This is so that we can determine what tests to carry out for our confirmatory data analyses. The Shapiro-Wilk test will be used. If the p-value is significant, the variable is NOT normally distributed. 
+
+We will use the original participants dataset as it is in long format. As the plot below shows, p-value is less than 0.5 i.e., the distribution of joviality is not normal and therefore non-parametric statistical tests must be used. 
+
+::: callout-important
+We need to test the normality assumption as it determines if we will use parametric or non-parametric methods for our statistical tests. Using the wrong tests may result in erroneous results and conclusions! 
+:::
+
+::: panel-tabset
+### Plot
+
+```{r}
+#| echo: false 
+
+#Plot QQplot for Joviality
+qq <- ggplot(ppt,
+       aes(sample=Joviality)) +  
+  stat_qq() +
+  stat_qq_line()
+
+#Run the Shapiro Wilki test
+sw_t <- shapiro_test(ppt$Joviality) %>% gt()   
+
+#Create a temp table
+tmp <- tempfile(fileext = '.png') 
+# Save sw_t into tmp folder
+gtsave(sw_t, tmp)  
+table_png <- png::readPNG(tmp, native = TRUE)
+
+qq+table_png
+```
+
+### Code
+
+```{r}
+#| eval: false
+#| code-fold: false
+
+#Plot QQplot for Joviality
+qq <- ggplot(final,
+       aes(sample=Joviality)) +  
+  stat_qq() +
+  stat_qq_line()
+
+#Run the Shapiro Wilki test
+#Use gt format to provide a nice table
+sw_t <- shapiro_test(final$Joviality) %>% gt()   
+
+#Create a temp table
+tmp <- tempfile(fileext = '.png') # create  temp table
+# Save sw_t into tmp folder
+gtsave(sw_t, tmp)  
+table_png <- png::readPNG(tmp, native = TRUE)
+
+qq+table_png
+
+```
+:::
+
+```{r}
+ggscatterstats(
+  data = final,
+  x = Joviality,
+  y = Total_Savings,
+  marginal = FALSE,
+  ) + 
+ggtitle("Correlation betwen Joviality and Savings") +
+labs(x = "Joviality Score", y = "Average Savings")
+```
+
+
+We often hear that having hobbies and taking part in leisure activities will help us relax and make us happier.
+
+### **3.6. Bah**
+
+## **Key Takeaways**
