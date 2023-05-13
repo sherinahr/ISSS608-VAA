@@ -26,11 +26,9 @@ City of Engagement, with a total population of 50,000, is a small city located a
 
 This take-home exercise will explore the demographic and financial characteristics of the city of Engagement using static and interactive statistical graphics methods. The data will be processed using the [tidyverse](https://www.tidyverse.org/) family of packages and the visualisations developed using [ggplot2](https://ggplot2.tidyverse.org/index.html) and its extensions.
 
-Specifically, this exercise seeks to fulfill the following objectives using Exploratory & Confirmatory Data Analysis:
+Specifically, this exercise seeks to answer the following using Exploratory & Confirmatory Data Analysis:
 
--   Explore the factors influencing joviality index and
-
--   Explore the factors influencing income.
+\[**What influences happiness?**\]{style="color: darkgreen"}
 
 ### **1.2 The Data**
 
@@ -316,7 +314,7 @@ In this section, we will first take a quick look at the demographic profile of t
 
 ### **3.1. Age & Education**
 
-The adult residents (aged 21 and above) are quite evenly distributed in the City. As for education level, almost half (48%) of the residents had at least high school or college education, and 45% had at least a Bachelor's degree. 
+The adult residents (aged 21 and above) are quite evenly distributed in the City. As for education level, almost half (48%) of the residents had at least high school or college education, and 45% had at least a Bachelor's degree.
 
 ::: panel-tabset
 ### Plot
@@ -402,7 +400,7 @@ p2 <- ggplot(education_proportion, aes(x="", y=prop, fill=EducationLevel)) +
 
 ### **3.2. Household Size and Children**
 
-Residents of the City tend to have nuclear households, with a maximum of 3 members in a household. From the bar chart, we can see that about one-third of the residents have children. 
+Residents of the City tend to have nuclear households, with a maximum of 3 members in a household. From the pie chart, we can see that about one-third of the residents have children.
 
 ::: panel-tabset
 ### Plot
@@ -410,20 +408,41 @@ Residents of the City tend to have nuclear households, with a maximum of 3 membe
 ```{r}
 #| echo: false 
 
-#Plot the bar chart for HHsize Category
-p1 <- ggplot(data = final,
-       aes(x = HouseholdSize, fill = HaveKids)) +
-  geom_bar() +
-  geom_text(aes(label=..count..),
-            stat="count",
-            vjust=1.5,
-            color="black") +
-  theme_classic() +
-  xlab("Household Size (Persons)") +
-  ylab("No. of\nResidents") +
-  ggtitle("Distribution of Household Size") +
-  scale_fill_brewer(palette="Pastel2")
-p1
+#Calculate proportion of residents in each category
+final$HouseholdSize <- as.factor(final$HouseholdSize)
+household_proportion <- final %>%
+  count(HouseholdSize) %>%
+  mutate(prop = n / sum(n))
+
+#Plot the pie chart for HHsize Category
+p1 <- ggplot(household_proportion, aes(x="", y=prop, fill=HouseholdSize)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  geom_text(aes(label = paste0(round(prop*100), "%")), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_brewer(palette="Pastel2") +
+  ggtitle("Distribution of Households (%)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(fill ="Household Size")
+
+#Calculate proportion of residents for having kids
+final$HaveKids <- as.factor(final$HaveKids)
+kids_proportion <- final %>%
+  count(HaveKids) %>%
+  mutate(prop = n / sum(n))
+
+#Plot the pie chart for having kids
+p2 <- ggplot(kids_proportion, aes(x="", y=prop, fill=HaveKids)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  geom_text(aes(label = paste0(round(prop*100), "%")), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_brewer(palette="Pastel2") +
+  ggtitle("Distribution of Children in Households (%)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(fill ="Have Children")
+
+p1 / p2
 ```
 
 ### Code
@@ -431,31 +450,50 @@ p1
 ```{r}
 #| eval: false
 
-#Plot the bar chart for HHsize Category
-p1 <- ggplot(data = final,
-       aes(x = HouseholdSize, fill = HaveKids)) +
-  geom_bar() +
-  geom_text(aes(label=..count..),
-            stat="count",
-            vjust=1.5,
-            color="black") +
-  theme_classic() +
-  xlab("Household Size (Persons)") +
-  ylab("No. of\nResidents") +
-  ggtitle("Distribution of Households") +
-  scale_fill_brewer(palette="Pastel2")
-p1
+#Calculate proportion of residents in each category
+final$HouseholdSize <- as.factor(final$HouseholdSize)
+household_proportion <- final %>%
+  count(HouseholdSize) %>%
+  mutate(prop = n / sum(n))
+
+#Plot the pie chart for HHsize Category
+p1 <- ggplot(household_proportion, aes(x="", y=prop, fill=HouseholdSize)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  geom_text(aes(label = paste0(round(prop*100), "%")), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_brewer(palette="Pastel2") +
+  ggtitle("Distribution of Households (%)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(fill ="Household Size")
+
+#Calculate proportion of residents for having kids
+final$HaveKids <- as.factor(final$HaveKids)
+kids_proportion <- final %>%
+  count(HaveKids) %>%
+  mutate(prop = n / sum(n))
+
+#Plot the pie chart for having kids
+p2 <- ggplot(kids_proportion, aes(x="", y=prop, fill=HaveKids)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  geom_text(aes(label = paste0(round(prop*100), "%")), position = position_stack(vjust = 0.5), size = 3) +
+  scale_fill_brewer(palette="Pastel2") +
+  ggtitle("Distribution of Children in Households (%)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(fill ="Have Children")
+
+p1 / p2
 ```
 :::
 
 ### **3.3. Joviality**
 
-
+One of the aims of this analysis is to see what influences happiness.
 
 ## **4. What influences income?**
 
 ### **4.1. Education and smth**
-
-
 
 ## **4. Key Takeaways**
