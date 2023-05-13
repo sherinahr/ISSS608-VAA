@@ -1,10 +1,18 @@
 ---
-title: "Take-Home_Ex01"
+title: "Demographics & Financial Analysis of City of Engagement"
 author: "Sherinah Rashid"
 tbl-cap-location: top
 highlight-style: breeze
 code-block-bg: true
 code-block-border-left: "#18661c"
+format:
+  html: 
+    code-fold: true
+    code-summary: "Click to show the code"
+execute:
+  eval: true
+  echo: true
+  warning: false
 ---
 
 ## **1. Overview**

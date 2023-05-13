@@ -1,0 +1,30 @@
+---
+title: "Take Home Ex 2"
+---
+
+This Take-Home exercise is about network visualisation. 
+
+## **1.1 The Dataset**
+
+The dataset used is from the VAST Challenge 2023. Let's first load the packages and dataset to be used.
+
+```{r}
+pacman::p_load(jsonlite, tidygraph, ggraph, visNetwork, tidyverse)
+```
+
+```{r}
+# The front part before :: is to load the package.
+
+MC1 <- jsonlite::fromJSON("data/MC1.json")
+```
+
+The data is in list format but we need to change it into a tabular format. We also will use the select() function to reorganise the structure of the dataset.
+
+```{r}
+MC1_nodes <- as_tibble(MC1$nodes) %>%
+  select(id, type, country)
+```
+
+```{r}
+MC1_edges <- as_tibble(MC1$links) %>%
+  select(source, target, type, weight, key)

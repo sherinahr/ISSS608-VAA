@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>ISSS608 - Sherinah Rashid - In-Class Exercise 5</title>
+<title>ISSS608 - Sherinah Rashid - Hands on Ex 5</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -233,8 +233,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
    
   <ul>
   <li><a href="#the-dataset" id="toc-the-dataset" class="nav-link active" data-scroll-target="#the-dataset"><strong>1.1 The Dataset</strong></a></li>
-  <li><a href="#cleaning-the-dataset" id="toc-cleaning-the-dataset" class="nav-link" data-scroll-target="#cleaning-the-dataset"><strong>1.2 Cleaning The Dataset</strong></a></li>
-  <li><a href="#network-objects" id="toc-network-objects" class="nav-link" data-scroll-target="#network-objects"><strong>1.3 Network Objects</strong></a></li>
+  <li><a href="#the-dataset-1" id="toc-the-dataset-1" class="nav-link" data-scroll-target="#the-dataset-1"><strong>1.2 The Dataset</strong></a></li>
   </ul>
 </nav>
     </div>
@@ -243,7 +242,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">In-Class Exercise 5</h1>
+<h1 class="title">Hands on Ex 5</h1>
 </div>
 
 
@@ -277,8 +276,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>GAStech_edges <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/GAStech_email_edge-v2.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="cleaning-the-dataset" class="level2">
-<h2 class="anchored" data-anchor-id="cleaning-the-dataset"><strong>1.2 Cleaning The Dataset</strong></h2>
+<section id="the-dataset-1" class="level2">
+<h2 class="anchored" data-anchor-id="the-dataset-1"><strong>1.2 The Dataset</strong></h2>
 <p>We will examine the structure of the data frame using glimpse() of dplyr.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(GAStech_edges)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -303,7 +302,7 @@ $ targetLabel &lt;chr&gt; "Isak.Baza", "Lucas.Alcazar", "Felix.Resumir", "Hideki
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label =</span> <span class="cn">TRUE</span>,</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">abbr =</span> <span class="cn">FALSE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>A close examination of GAStech_edges data.frame reveals that it consists of individual e-mail flow records. This is not very useful for visualisation. In view of this, we will aggregate the individual by date, senders, receivers, main subject and day of the week. Take note to (i) ungroup after you have used the group_by() function so that you can alter how you want to use group_by() for subsequent code chunks, and (ii) filter only those records where the source does not equal to target to ensure only unique interactions will be visualised later.</p>
+<p>A close examination of GAStech_edges data.frame reveals that it consists of individual e-mail flow records. This is not very useful for visualisation. In view of this, we will aggregate the individual by date, senders, receivers, main subject and day of the week.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>GAStech_edges_aggregated <span class="ot">&lt;-</span> GAStech_edges <span class="sc">%&gt;%</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(MainSubject <span class="sc">==</span> <span class="st">"Work related"</span>) <span class="sc">%&gt;%</span></span>
@@ -323,42 +322,6 @@ $ source  &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 $ target  &lt;dbl&gt; 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6,…
 $ Weekday &lt;ord&gt; Sunday, Monday, Tuesday, Wednesday, Friday, Sunday, Monday, Tu…
 $ Weight  &lt;int&gt; 5, 2, 3, 4, 6, 5, 2, 3, 4, 6, 5, 2, 3, 4, 6, 5, 2, 3, 4, 6, 5,…</code></pre>
-</div>
-</div>
-</section>
-<section id="network-objects" class="level2">
-<h2 class="anchored" data-anchor-id="network-objects"><strong>1.3 Network Objects</strong></h2>
-<p>We will use tbl_graph() of tinygraph package to build an tidygraph’s network graph data.frame. Let’s review how the graph looks.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>GAStech_graph <span class="ot">&lt;-</span> <span class="fu">tbl_graph</span>(<span class="at">nodes =</span> GAStech_nodes,</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">edges =</span> GAStech_edges_aggregated, </span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">directed =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>GAStech_graph</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tbl_graph: 54 nodes and 1372 edges
-#
-# A directed multigraph with 1 component
-#
-# A tibble: 54 × 4
-     id label               Department     Title                                
-  &lt;dbl&gt; &lt;chr&gt;               &lt;chr&gt;          &lt;chr&gt;                                
-1     1 Mat.Bramar          Administration Assistant to CEO                     
-2     2 Anda.Ribera         Administration Assistant to CFO                     
-3     3 Rachel.Pantanal     Administration Assistant to CIO                     
-4     4 Linda.Lagos         Administration Assistant to COO                     
-5     5 Ruscella.Mies.Haber Administration Assistant to Engineering Group Manag…
-6     6 Carla.Forluniau     Administration Assistant to IT Group Manager        
-# ℹ 48 more rows
-#
-# A tibble: 1,372 × 4
-   from    to Weekday Weight
-  &lt;int&gt; &lt;int&gt; &lt;ord&gt;    &lt;int&gt;
-1     1     2 Sunday       5
-2     1     2 Monday       2
-3     1     2 Tuesday      3
-# ℹ 1,369 more rows</code></pre>
 </div>
 </div>
 

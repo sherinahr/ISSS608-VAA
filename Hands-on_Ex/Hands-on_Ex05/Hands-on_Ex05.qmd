@@ -1,5 +1,5 @@
 ---
-title: "In-Class Exercise 5"
+title: "Hands on Ex 5"
 ---
 
 Today's hands-on exercise is about network visualisation, where four network data modelling and visualisation packages will be installed and launched.
@@ -25,15 +25,14 @@ GAStech_nodes <- read_csv("data/GAStech_email_node.csv", show_col_types = FALSE)
 GAStech_edges <- read_csv("data/GAStech_email_edge-v2.csv", show_col_types = FALSE)
 ```
 
-## **1.2 Cleaning The Dataset**
+## **1.2 The Dataset**
 
 We will examine the structure of the data frame using glimpse() of dplyr.
 
 ```{r}
 glimpse(GAStech_edges)
 ```
-
-The output report of GAStech_edges above reveals that the SentDate is treated as "Character" data type instead of date data type. Before we continue, it is important for us to change the data type of SentDate field to "Date"" data type.The code chunk below will be used to perform the changes.
+The output report of GAStech_edges above reveals that the SentDate is treated as “Character” data type instead of date data type. Before we continue, it is important for us to change the data type of SentDate field to “Date”” data type.The code chunk below will be used to perform the changes.
 
 ```{r}
 GAStech_edges <- GAStech_edges %>%
@@ -43,7 +42,7 @@ GAStech_edges <- GAStech_edges %>%
                         abbr = FALSE))
 ```
 
-A close examination of GAStech_edges data.frame reveals that it consists of individual e-mail flow records. This is not very useful for visualisation. In view of this, we will aggregate the individual by date, senders, receivers, main subject and day of the week. Take note to (i) ungroup after you have used the group_by() function so that you can alter how you want to use group_by() for subsequent code chunks, and (ii) filter only those records where the source does not equal to target to ensure only unique interactions will be visualised later. 
+A close examination of GAStech_edges data.frame reveals that it consists of individual e-mail flow records. This is not very useful for visualisation. In view of this, we will aggregate the individual by date, senders, receivers, main subject and day of the week.
 
 ```{r}
 #| output: false
@@ -61,18 +60,3 @@ Now let's review the aggregated dataset. It looks great, good job!
 ```{r}
 glimpse(GAStech_edges_aggregated)
 ```
-
-## **1.3 Network Objects**
-
-We will use tbl_graph() of tinygraph package to build an tidygraph’s network graph data.frame. Let's review how the graph looks.
-
-```{r}
-GAStech_graph <- tbl_graph(nodes = GAStech_nodes,
-                           edges = GAStech_edges_aggregated, 
-                           directed = TRUE)
-```
-
-```{r}
-GAStech_graph
-```
-
