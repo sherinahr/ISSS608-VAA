@@ -566,7 +566,7 @@ p3 <- ggplot(final %>% mutate(ParticipantID = as.numeric(ParticipantID)),
   ease_aes('linear')
 
 #Specify to animate within a specified duration
-ggplotly(p3, duration = 20)
+animate(p3, duration =20)
 ```
 
 ### Code
@@ -592,7 +592,7 @@ p3 <- ggplot(final %>% mutate(ParticipantID = as.numeric(ParticipantID)),
   ease_aes('linear')
 
 #Specify to animate within a specified duration
-ggplotly(p3, duration = 20)
+animate(p3, duration =20)
 ```
 :::
 
