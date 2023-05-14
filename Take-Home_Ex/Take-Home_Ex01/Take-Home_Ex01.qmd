@@ -753,9 +753,9 @@ In this vein, let's explore if the financial health - income, savings, and expen
 
 However, the correlation plots below shows otherwise:
 
--   For income, there seems to be a negative trend for all age groups i.e. higher income is negatively correlated with lower joviality scores. 
+-   For income, there seems to be a negative trend for all age groups i.e. higher income is negatively correlated with lower joviality scores.
 -   For savings, the same trend persists - a negative trend for all age groups i.e. higher savings is negatively correlated with lower joviality scores.
--   For cost of living, there is an unexpected negative trend for all age groups i.e. higher expenses is positively correlated with higher joviality scores.
+-   For cost of living, there is an unexpected positive trend for all age groups i.e. higher expenses is positively correlated with higher joviality scores.
 
 ::: panel-tabset
 ### Income
@@ -825,7 +825,7 @@ p6
 ```
 :::
 
-The correlation test for the above trends are significant, indicating that the trends are statistically significant. If we go back to the Harvard Business Review's findings, it is possible that residents are indeed spending their money in ways that make them happy, and thus cost of living is positively correlated with joviality scores, and this is statistically significant. 
+The correlation test for the above trends are significant, indicating that the trends are statistically significant. If we go back to the Harvard Business Review's findings, it is possible that residents are indeed spending their money in ways that make them happy, and thus cost of living is positively correlated with joviality scores, and this is statistically significant.
 
 ::: panel-tabset
 ### Income
@@ -923,14 +923,13 @@ theme_classic()
 
 ### Does Education and Age influence Happiness?
 
-In 2016, the Time Magazine [reported](https://time.com/collection/guide-to-happiness/4464811/aging-happiness-stress-anxiety-depression/) that older people tend to be happier than young adults, as they are much better able to brush off life's small stressors and accumulate a valuable thing called wisdom: being emotionally stable and compassionate, knowing yourself and being able to make smart social decisions. A year earlier, Time also published a [report](https://time.com/3759397/education-happiness-mental-health/) stating that there is no link between education level and happiness. It will be interesting to see if these two trends hold true for residents in the City. 
+In 2016, the Time Magazine [reported](https://time.com/collection/guide-to-happiness/4464811/aging-happiness-stress-anxiety-depression/) that older people tend to be happier than young adults, as they are much better able to brush off life's small stressors and accumulate a valuable thing called wisdom: being emotionally stable and compassionate, knowing yourself and being able to make smart social decisions. A year earlier, Time also published a [report](https://time.com/3759397/education-happiness-mental-health/) stating that there is no link between education level and happiness. It will be interesting to see if these two trends hold true for residents in the City.
 
 #### Education and Happiness
 
 Since the variable joviality did not meet the normality assumption, the non-parametric Kruskal Wallis test was conducted to find if mean joviality scores differed between different levels of education. As shown below, the p-value of the Kruskal-Wallis rank sum test is 0.0036. We can conclude that mean joviality scores differed significantly across the four education levels. Specifically, High School or College education level differed significantly from Bachelors and Graduate. The mean joviality score of Bachelors and Graduate was higher than that of High School or College, indicating that the higher the level of education, the happier you are.
 
 ::: panel-tabset
-
 ### Plot
 
 ```{r}
@@ -942,7 +941,6 @@ ggbetweenstats(data = joviality, x = EducationLevel, y = Joviality,
                type = "np", pairwise.comparisons = TRUE, pairwise.display = "s",
                mean.ci = T, p.adjust.method = "fdr",  conf.level = 0.95,
                title = "Comparison of Mean Joviality index across Education Levels") + 
-  scale_y_continuous(limits = c(0, 2)) +
   theme(axis.title.y=element_text(angle = 0,
                                   vjust=0.9)) +
   theme_classic() 
@@ -960,7 +958,6 @@ ggbetweenstats(data = joviality, x = EducationLevel, y = Joviality,
                type = "np", pairwise.comparisons = TRUE, pairwise.display = "s",
                mean.ci = T, p.adjust.method = "fdr",  conf.level = 0.95,
                title = "Comparison of Mean Joviality index across Education Levels") + 
-  scale_y_continuous(limits = c(0, 2)) +
   theme(axis.title.y=element_text(angle = 0,
                                   vjust=0.9)) +
   theme_classic() 
@@ -969,11 +966,11 @@ ggbetweenstats(data = joviality, x = EducationLevel, y = Joviality,
 :::
 
 #### Age and Happiness
-In our revamped Joviality dataset, age exists as a categorical and continuous variable. It will be interesting to see if there is a difference in our analyses for both. As the plot shows, though age is negatively correlated with joviality scores and it is statistically significant, it is a very weak correlation of only -0.07. Age as a categorical variable did not have any significant influence on joviality scores, with p-value > 0.05.  
+
+In our revamped Joviality dataset, age exists as a categorical and continuous variable. It will be interesting to see if there is a difference in our analyses for both. As the plot shows, though age is negatively correlated with joviality scores and it is statistically significant, it is a very weak correlation of only -0.07. Age as a categorical variable did not have any significant influence on joviality scores, with p-value \> 0.05. Age as a continuous variable had a negative influence on joviality scores.
 
 ::: panel-tabset
-
-### Age (Continuous) 
+### Age (Continuous)
 
 ```{r}
 #| echo: false 
@@ -1038,16 +1035,15 @@ ggbetweenstats(data = joviality, x = Age_Category, y = Joviality,
 
 ### Does Marital Status and Having Kids Influence Happiness?
 
-Going back to Time magazine, it [reported](https://time.com/collection/guide-to-happiness/4370344/parents-happiness-children-study/) that a study of the life satisfaction of 22 Western countries found that in many countries, parents were happier than non-parents, except for the US. 
+Going back to Time magazine, it [reported](https://time.com/collection/guide-to-happiness/4370344/parents-happiness-children-study/) that a study of the life satisfaction of 22 Western countries found that in many countries, parents were happier than non-parents, except for the US.
 
-Therefore in our final analysis, we will explore if marital status and having children influences happiness. Since all residents with a household size of 3 also satisfied the condition of true for the variable HaveKids, we will use household size as a proxy variable for marital status i.e., 1 = single, 2 = married, 3 = married with a child. 
+Therefore in our final analysis, we will explore if marital status and having children influences happiness. Since all residents with a household size of 3 also satisfied the condition of true for the variable HaveKids, we will use household size as a proxy variable for marital status i.e., 1 = single, 2 = married, 3 = married with a child.
 
-The plot shows that for singles, there seems to be 2 main humps at Joviality scores of 0.2 and 0.9 i.e. singles experience a varying range of happiness with some being happier than others. For married couples and those with children, joviality scores tend to be lower. 
+The plot shows that for singles, there seems to be 2 main humps at Joviality scores of 0.2 and 0.9 i.e. singles experience a varying range of happiness with some being happier than others. For majority of the married couples and those with children, joviality scores tend to be lower.
 
-The Kruskal-Wallis rank sum test was non-significant with a p-value > 0.05, indicating that joviality was not influenced by marital status.
+The Kruskal-Wallis rank sum test was non-significant with a p-value \> 0.05, indicating that joviality was not influenced by marital status and having children.
 
 ::: panel-tabset
-
 ### Plot
 
 ```{r}
@@ -1123,5 +1119,20 @@ ggbetweenstats(data = joviality, x = HouseholdSize, y = Joviality,
 ```
 :::
 
-
 ## **Key Takeaways**
+
+The analyses have provided the following key takeaways:
+
+1.  The residents are quite evenly distributed in terms of age and household size. Most of the residents have at least high school or college education, and tend to have nuclear households.
+
+2.  In terms of financial health, it is possible that most residents are just getting by, as most residents earn below $3,000 and yet experience a cost of living of about half their income. Majority of their expenses are spent on shelter. 
+
+3.  Interestingly, residents who earned and saved more had lower scores for happiness than those who spent more. It is possible that residents who spent more are doing so on pursuits which bring them greater joy. There was also no difference in trend amongst different age groups.
+
+4.  Residents with higher levels of education (Bachelors & Graduate) tended to be happier than those who had at least high school or college education. 
+
+5.  Residents tended to experience a dip in happiness as they age, though the dip is not severe and thus not a cause for concern. 
+
+6. Marital status and having children did not have any influence on happiness level.
+
+Officials may wish to conduct more life courses for the residents on topics such as financial planning, mental health and wellness programmes, and ensure that older residents are able to engage in activities and social support which can ensure their mental health and therefore improve their happiness as they continue to age. 
