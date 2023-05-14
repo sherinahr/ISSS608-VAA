@@ -486,7 +486,7 @@ p1 / p2
 ```
 :::
 
-### **3.3. Financial: Distribution of Total Income & Cost of Living** 
+### **3.3. Financial: Distribution of Total Income & Cost of Living**
 
 The line charts below show us an overview of the proportion of residents for the total income (as defined by the sum of wages and rent adjustment) and the cost of living. Both distributions are positively skewed i.e., mean is greater than the median. Majority of the residents have a total income of below \$3,000 approximately, and have a cost of living of lower than \$2,000.
 
@@ -541,7 +541,7 @@ gg1 / gg2
 ```
 :::
 
-Next, let's look at the trend of the total income and cost of living across the months using the animated graph below. We can see that primarily, monthly expenditures were fairly stable across months. As for total income, there was a spike in March 2022, but then returned to baseline amounts thereafter. 
+Next, let's look at the trend of the total income and cost of living across the months using the animated graph below. We can see that primarily, monthly expenditures were fairly stable across months. As for total income, there was a spike in March 2022, but then returned to baseline amounts thereafter.
 
 ::: panel-tabset
 ### Plot
@@ -596,10 +596,9 @@ animate(p3, duration =20)
 ```
 :::
 
+### **3.4 Financial: Patterns of Cost of Living**
 
-### **3.4 Financial: Patterns of Cost of Living** 
-
-Now that we have seen the general trend of the total income and expenditures, let's look at the patterns of cost of living. As we need the long format, we will first create a new table called Expenses from the fj_final table so as to isolate the specific expenditure categories. 
+Now that we have seen the general trend of the total income and expenditures, let's look at the patterns of cost of living. As we need the long format, we will first create a new table called Expenses from the fj_final table so as to isolate the specific expenditure categories.
 
 ```{r}
 #| output: false
@@ -660,13 +659,41 @@ ggplot(data = expenses,
 
 ### **3.5. Joviality**
 
-Now that we have finished exploring the demographic and financial characteristics, let's plot the distribution of joviality and assess if it meets the normality assumption. This is so that we can determine what tests to carry out for our confirmatory data analyses. The Shapiro-Wilk test will be used. If the p-value is significant, the variable is NOT normally distributed. 
-
-We will use the original participants dataset as it is in long format. As the plot below shows, p-value is less than 0.5 i.e., the distribution of joviality is not normal and therefore non-parametric statistical tests must be used. 
+Now that we have finished exploring the demographic and financial characteristics, let's plot the distribution of joviality and assess if it meets the normality assumption. The Shapiro-Wilk test will be used. If the p-value is significant, the variable is not normally distributed. We will then determine what tests to carry out for our confirmatory data analyses.
 
 ::: callout-important
-We need to test the normality assumption as it determines if we will use parametric or non-parametric methods for our statistical tests. Using the wrong tests may result in erroneous results and conclusions! 
+We need to test the normality assumption as it determines if we will use parametric or non-parametric methods for our statistical tests. Using the wrong tests may result in erroneous results and conclusions!
 :::
+
+For the testing of normality assumption and CDA, we will transform the data to a format where each row will be equivalent to 1 resident using the below code chunk.
+
+```{r}
+joviality <- final %>%
+  #To ungroup any variables if necessary
+  ungroup() %>%
+  #To select the columns as needed
+  select(ParticipantID, Cost_of_living, Total_Income, Total_Savings, HouseholdSize,
+         HaveKids, EducationLevel, InterestGroup, age, Age_Category, Joviality) %>% 
+  group_by(ParticipantID, Joviality, HouseholdSize, HaveKids, EducationLevel, InterestGroup, age, Age_Category) %>% 
+  #Calculate average financial information per participant across the 15 months
+  summarise(across(c(Total_Income, Cost_of_living, Total_Savings), mean)) %>%
+  rename("Avg_MonthlyIncome" = "Total_Income",
+         "Avg_MonthlyCosts" = "Cost_of_living",
+         "Avg_MonthlySavings" = "Total_Savings")
+
+#Round values
+joviality$Avg_MonthlyIncome <- round(joviality$Avg_MonthlyIncome,digits=0)
+joviality$Avg_MonthlyCosts <- round(joviality$Avg_MonthlyCosts,digits=0)
+joviality$Avg_MonthlySavings <- round(joviality$Avg_MonthlySavings,digits=0)
+
+#Check output of data
+DT::datatable(joviality, class = "compact")
+
+```
+
+#### Testing of Normality Assumption
+
+As the plot below shows, p-value is less than 0.05 i.e., the distribution of joviality is not Normal and therefore non-parametric statistical tests must be used.
 
 ::: panel-tabset
 ### Plot
@@ -675,7 +702,7 @@ We need to test the normality assumption as it determines if we will use paramet
 #| echo: false 
 
 #Plot QQplot for Joviality
-qq <- ggplot(ppt,
+qq <- ggplot(joviality,
        aes(sample=Joviality)) +  
   stat_qq() +
   stat_qq_line()
@@ -699,17 +726,16 @@ qq+table_png
 #| code-fold: false
 
 #Plot QQplot for Joviality
-qq <- ggplot(final,
+qq <- ggplot(joviality,
        aes(sample=Joviality)) +  
   stat_qq() +
   stat_qq_line()
 
 #Run the Shapiro Wilki test
-#Use gt format to provide a nice table
-sw_t <- shapiro_test(final$Joviality) %>% gt()   
+sw_t <- shapiro_test(ppt$Joviality) %>% gt()   
 
 #Create a temp table
-tmp <- tempfile(fileext = '.png') # create  temp table
+tmp <- tempfile(fileext = '.png') 
 # Save sw_t into tmp folder
 gtsave(sw_t, tmp)  
 table_png <- png::readPNG(tmp, native = TRUE)
@@ -719,20 +745,185 @@ qq+table_png
 ```
 :::
 
+#### Does Financial Health influence Happiness?
+
+The Harvard Business Review published a [research](https://hbr.org/2020/09/does-more-money-really-makes-us-more-happy#:~:text=A%20mountain%20of%20evidence%20shows,joy%20you%20get%20from%20it.) that on average, wealthier people are happier. However, how you spend, save, and think about money shapes how much joy you get from it.
+
+In this vein, let's explore if the financial health - income, savings, and expenditures - influences the happiness of residents in the City using correlation. Logically, the more income you earn, more savings you have, and less expenditures you have, should result in higher happiness. It will be interesting to assess if the age of the resident matters as well. It is possible that the older residents would tend to have higher income (due to experience), more savings, and more expenditures.
+
+However, the correlation plots below shows otherwise:
+
+-   For income, there seems to be a negative trend for all age groups i.e. higher income is negatively correlated with lower joviality scores. 
+-   For savings, the same trend persists - a negative trend for all age groups i.e. higher savings is negatively correlated with lower joviality scores.
+-   For cost of living, there is an unexpected negative trend for all age groups i.e. higher expenses is positively correlated with higher joviality scores.
+
+::: panel-tabset
+### Income
+
 ```{r}
+#| echo: false 
+
+p4 <- plot_ly(data = joviality, x = ~Joviality, y = ~Avg_MonthlyIncome, size = ~Avg_MonthlyIncome, 
+               color = ~Age_Category) %>%
+    layout(title = '<b> Correlation: Joviality and Income <b>', xaxis = list(title = 'Joviality Index'), yaxis = list(title = 'Average Income'), legend = list(title=list(text='<b> Age Category </b>')))
+
+p4
+```
+
+### Savings
+
+```{r}
+#| echo: false 
+
+p5 <- plot_ly(data = joviality, x = ~Joviality, y = ~Avg_MonthlySavings, size = ~Avg_MonthlySavings, 
+               color = ~Age_Category) %>%
+    layout(title = '<b> Correlation: Joviality and Savings <b>', xaxis = list(title = 'Joviality Index'), yaxis = list(title = 'Average Savings'), legend = list(title=list(text='<b> Age Category </b>')))
+
+p5
+
+```
+
+### Costs
+
+```{r}
+#| echo: false 
+
+p6 <- plot_ly(data = joviality, x = ~Joviality, y = ~Avg_MonthlyCosts, size = ~Avg_MonthlyCosts, 
+               color = ~Age_Category) %>%
+    layout(title = '<b> Correlation: Joviality and Cost of Living <b>', xaxis = list(title = 'Joviality Index'), yaxis = list(title = 'Average Costs'), legend = list(title=list(text='<b> Age Category </b>')))
+
+p6
+
+```
+
+### Code
+
+```{r}
+#| eval: false
+#| code-fold: false
+
+#Mapping correlation of Joviality & Average Monthly Income
+p4 <- plot_ly(data = joviality, x = ~Joviality, y = ~Avg_MonthlyIncome, size = ~Avg_MonthlyIncome, 
+               color = ~Age_Category) %>%
+    layout(title = '<b> Correlation: Joviality and Income <b>', xaxis = list(title = 'Joviality Index'), yaxis = list(title = 'Average Income'), legend = list(title=list(text='<b> Age Category </b>')))
+
+p4
+
+#Mapping correlation of Joviality & Average Monthly Savings
+p5 <- plot_ly(data = joviality, x = ~Joviality, y = ~Avg_MonthlySavings, size = ~Avg_MonthlySavings, 
+               color = ~Age_Category) %>%
+    layout(title = '<b> Correlation: Joviality and Savings <b>', xaxis = list(title = 'Joviality Index'), yaxis = list(title = 'Average Savings'), legend = list(title=list(text='<b> Age Category </b>')))
+
+p5
+
+#Mapping correlation of Joviality & Average Monthly Expenditures
+p6 <- plot_ly(data = joviality, x = ~Joviality, y = ~Avg_MonthlyCosts, size = ~Avg_MonthlyCosts, 
+               color = ~Age_Category) %>%
+    layout(title = '<b> Correlation: Joviality and Cost of Living <b>', xaxis = list(title = 'Joviality Index'), yaxis = list(title = 'Average Costs'), legend = list(title=list(text='<b> Age Category </b>')))
+
+p6
+```
+:::
+
+The correlation test for the above trends are significant, indicating that the trends are statistically significant. If we go back to the Harvard Business Review's findings, it is possible that residents are indeed spending their money in ways that make them happy, and thus cost of living is positively correlated with joviality scores, and this is statistically significant.
+
+::: panel-tabset
+### Income
+
+```{r}
+#| echo: false 
+
 ggscatterstats(
-  data = final,
+  data = joviality,
   x = Joviality,
-  y = Total_Savings,
+  y = Avg_MonthlyIncome,
   marginal = FALSE,
   ) + 
-ggtitle("Correlation betwen Joviality and Savings") +
-labs(x = "Joviality Score", y = "Average Savings")
+ggtitle("Joviality and Average Income") +
+labs(x = "Joviality Index", y = "Average Income") +
+theme_classic()
+
+
 ```
+
+### Savings
+
+```{r}
+#| echo: false 
+
+ggscatterstats(
+  data = joviality,
+  x = Joviality,
+  y = Avg_MonthlySavings,
+  marginal = FALSE,
+  ) + 
+ggtitle("Joviality and Average Savings") +
+labs(x = "Joviality Index", y = "Average Savings") +
+theme_classic()
+
+```
+
+### Costs
+
+```{r}
+#| echo: false 
+
+ggscatterstats(
+  data = joviality,
+  x = Joviality,
+  y = Avg_MonthlyCosts,
+  marginal = FALSE,
+  ) + 
+ggtitle("Joviality and Average Cost of Living") +
+labs(x = "Joviality Index", y = "Average Cost of Living") +
+theme_classic()
+
+```
+
+### Code
+
+```{r}
+#| eval: false
+#| code-fold: false
+
+#Statistical Test of Joviality & Average Monthly Income Correlation
+ggscatterstats(
+  data = joviality,
+  x = Joviality,
+  y = Avg_MonthlyIncome,
+  marginal = FALSE,
+  ) + 
+ggtitle("Joviality and Average Income") +
+labs(x = "Joviality Index", y = "Average Income") +
+theme_classic()
+
+#Statistical Test of Joviality & Average Monthly Savings Correlation
+ggscatterstats(
+  data = joviality,
+  x = Joviality,
+  y = Avg_MonthlySavings,
+  marginal = FALSE,
+  ) + 
+ggtitle("Joviality and Average Savings") +
+labs(x = "Joviality Index", y = "Average Savings") +
+theme_classic()
+
+#Statistical Test of Joviality & Average Monthly Expenditures Correlation
+ggscatterstats(
+  data = joviality,
+  x = Joviality,
+  y = Avg_MonthlyCosts,
+  marginal = FALSE,
+  ) + 
+ggtitle("Joviality and Average Cost of Living") +
+labs(x = "Joviality Index", y = "Average Cost of Living") +
+theme_classic()
+```
+:::
+
+#### Does Education and  influence Happiness?
 
 
 We often hear that having hobbies and taking part in leisure activities will help us relax and make us happier.
-
-### **3.6. Bah**
 
 ## **Key Takeaways**
