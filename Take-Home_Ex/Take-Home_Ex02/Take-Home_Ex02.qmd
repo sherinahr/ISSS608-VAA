@@ -1,30 +1,308 @@
 ---
-title: "Take Home Ex 2"
+title: "Mini Challenge 2 - VAST Challenge 2023"
+Author: Sherinah Rashid
+highlight-style: breeze
+format:
+  html: 
+    code-fold: true
+    code-summary: "Show code"
+    code-overflow: wrap
+    code-block-bg: true
+    code-block-border-left: "#18661c"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  freeze: auto
 ---
 
-This Take-Home exercise is about network visualisation. 
+## **Background**
 
-## **1.1 The Dataset**
+This Take-Home Exercise is part of the VAST Challenge 2023. The country of Oceanus has sought FishEye International's help in identifying companies possibly engaged in illegal, unreported, and unregulated (IUU) fishing. They hope to understand business relationships, including finding links that will help them stop IUU fishing and protect marine species that are affected by it.
 
-The dataset used is from the VAST Challenge 2023. Let's first load the packages and dataset to be used.
+FishEye knows from past experience that companies caught fishing illegally will shut down but will then often start up again under a different name. FishEye wants your help to visualize temporal patterns so they can compare the activities of companies over time to determine if the companies have returned to their nefarious acts.
+
+In line with this, this page will attempt to answer the following task under Mini-Challenge 2 of the VAST Challenge:
+
+**Use visual analytics to identify temporal patterns for individual entities and between entities in the knowledge graph FishEye created from trade records. Categorize the types of business relationship patterns you find. Limit your response to 600 words and 6 images.**
+
+## **Data Wrangling**
+
+The dataset used is from the VAST Challenge 2023. Let's first load the packages and datasets to be used.
 
 ```{r}
-pacman::p_load(jsonlite, tidygraph, ggraph, visNetwork, tidyverse)
+pacman::p_load(igraph, tidygraph, ggraph, visNetwork, lubridate, clock,
+               tidyverse, graphlayouts, jsonlite, patchwork)
 ```
 
 ```{r}
-# The front part before :: is to load the package.
-
-MC1 <- jsonlite::fromJSON("data/MC1.json")
+challenge_graph <- fromJSON("data/mc2_challenge_graph.json")
 ```
 
-The data is in list format but we need to change it into a tabular format. We also will use the select() function to reorganise the structure of the dataset.
+The data is in list format but we need to change it into a tabular format. We also will use the select() function to reorganise the structure of the dataset. This is first done for the nodes in the dataset. We will use the select function to choose the columns we need, as well as re-organise the order of columns.
 
 ```{r}
-MC1_nodes <- as_tibble(MC1$nodes) %>%
-  select(id, type, country)
+MC2_nodes <- as_tibble(challenge_graph$nodes) %>%
+  select(id, shpcountry, rcvcountry)
+MC2_nodes
+```
+
+Next, we will do the same for the edges in the dataset. Primary analysis of the data in Excel showed that there were a large portion of missing data under the columns of *valueofgoods_omu*, *volumeteu*, and *valueofgoodsusd*. As such, these columns will not be selected for the data.
+
+```{r}
+MC2_edges <- as_tibble(challenge_graph$links) %>%
+  select(source, target, arrivaldate, hscode, weightkg)
+
+```
+
+We will now use the glimpse() function to take a look at each of the tibble dataframes. The nodes dataframe has no issues.
+
+```{r}
+glimpse(MC2_nodes)
+```
+
+However, the edges dataframe reads its arrival date as a character function. Further, the task requires temporal analysis, but it only has the date.
+
+```{r}
+glimpse(MC2_edges)
+```
+
+Thus we will change the arrivaldate field to be in date format, and extract the year and month for further analysis as in the code chunk below. The preliminary analysis in Excel also showed many duplicate records, where there was the same shipment in terms of weight, which is not possible. Thus we will also extract the distinct records.
+
+```{r}
+MC2_edges <- MC2_edges %>%
+  mutate(ArrDate = ymd(arrivaldate)) %>%
+  mutate(Year = year(arrivaldate)) %>%
+  mutate(Month = month(arrivaldate)) %>%
+  distinct()
+
+#To check the dataset
+glimpse(MC2_edges)
+
+```
+
+### **Prepare the Edges Data Table**
+
+Examining the dataframe shows that it comprises individual records which is not very useful for visualisation, since we would like to conduct a network analysis. As such, we will perform aggregation of the data by source, target, hscode, and Year, so that the number of transactions will be transformed to become the weight of the edge between the nodes. Since we do not want linkages with low weights, we will filter to select only the edges which have weights of more than 20.
+
+Further, examination of [HScodes](https://connect2india.com/hs-codes-directory/hs-code-30617) indicate that HScode equivalent to 306170 refers to fish and crustaceans. Thus we will filter the data just for this HScode, as the other records may be shipments of other materials.
+
+```{r}
+mc2_edges_aggregated <- MC2_edges %>%
+  filter(hscode == "306170") %>%
+  group_by(source, target, hscode, Year) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  filter(weights > 20) %>%
+  ungroup()
+glimpse(mc2_edges_aggregated)
+```
+
+### **Prepare the Nodes Data Table**
+
+Instead of using the nodes data table extracted from the original dataset, we will prepare a new nodes data table by using the source and target fields of mc2_edges_aggregated data table. This is necessary to ensure that the nodes in the nodes data tables include all the source and target values.
+
+```{r}
+id1 <- mc2_edges_aggregated %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- mc2_edges_aggregated %>%
+  select(target) %>%
+  rename(id = target)
+mc2_nodes_extracted <- rbind(id1, id2) %>%
+  distinct()
+```
+
+## **Building an overview of the network graph**
+
+First, we will need to prepare the data model, and to do so, we rename the source and target columns in the Edges data. Using the subsequent code chunk, we will filter the nodes from the nodes data, which only exist in the edges data, and then plot our interactive network graph using the visNetwork() function. When we look at the graph, we notice that there is a ring of disconnected mini-graphs within, but we will retain them just in case they can be useful later.
+
+```{r}
+mc2_edges_aggregated <- mc2_edges_aggregated %>%
+  rename(from = source) %>%
+  rename(to = target) %>%
+  filter(from!=to) %>%
+  ungroup()
+```
+
+Though the graph looks too dense to provide useful information, we can actually select the ID and note how widespread the connections of each company are. If we hover over the various nodes, we can even see that there are a few companies which have extremely extensive networks:
+
+1.  hai dan Corporation Wharf
+2.  Caracola del Este Ltd. Liability Co
+3.  AquaDelight N.V. Coral Reef
+
+These companies may be connected well with other fishing companies for a few reasons:
+
+-   They may be collaborating to share resources such as fishing equipment, vessels, and crew members,
+
+-   They may have cooperative agreements to collectively fish together, or
+
+-   They may be the mediators in that they collaborate to have better market access and distribution channels. This would allow them to negotiate better deals with wholesalers, processors and distributors, thus letting them reach a wider customer base.
+
+::: callout-note
+Network graphs may seem overwhelming at first, especially for a large graph like this. Take your time to go through the nodes and explore using the interactivity feature, and see what you can learn!
+:::
+
+```{r}
+edges <- mc2_edges_aggregated 
+nodes <- mc2_nodes_extracted %>%
+  filter(id %in% c("id", edges$from, edges$to))
+
+
+visNetwork(nodes, edges, main = "An Overview of the Network Graph") %>%
+  visIgraphLayout(layout = "layout_with_fr") %>%
+  visEdges(arrows = 'to',
+           smooth = list(enables = TRUE,
+                         type= 'curvedCW'),
+           shadow = FALSE,
+           dash = FALSE) %>%
+  visOptions(highlightNearest = list (enabled = TRUE, hover = TRUE),
+             nodesIdSelection = TRUE)  
+```
+
+## **Visualisation of Growth by Year**
+
+Since we are interested in temporal patterns, let's plot the connections by year, so that we can see how the layout of the graph changes. Below is the code chunk to filter the data by each year and then create the graph using the tbl_graph() and ggraph functions.
+
+```{r}
+
+#Plot for 2028
+edges_2028 <- edges %>%
+  filter(Year == "2028")
+nodes_2028 <- nodes %>%
+  filter(id %in% c("id", edges_2028$from, edges_2028$to))
+
+graph1 <- tbl_graph(nodes = nodes_2028,
+                       edges = edges_2028,
+                       directed = TRUE)
+
+g1 <- ggraph(graph1, 
+            layout = "nicely") + 
+  geom_edge_link(aes(width=weights), 
+                 alpha=0.2) +
+  scale_edge_width(range = c(0.1, 5)) +
+  geom_node_point(size = 2, show.legend = FALSE) +
+  ggtitle ("2028")
+
+#Plot for 2029
+edges_2029 <- edges %>%
+  filter(Year == "2029")
+nodes_2029 <- nodes %>%
+  filter(id %in% c("id", edges_2029$from, edges_2029$to))
+
+graph2 <- tbl_graph(nodes = nodes_2029,
+                       edges = edges_2029,
+                       directed = TRUE)
+
+g2 <- ggraph(graph2, 
+            layout = "nicely") + 
+  geom_edge_link(aes(width=weights), 
+                 alpha=0.2) +
+  scale_edge_width(range = c(0.1, 5)) +
+  geom_node_point(size = 2, show.legend = FALSE)+
+  ggtitle ("2029")
+
+#Plot for 2030
+edges_2030 <- edges %>%
+  filter(Year == "2030")
+nodes_2030 <- nodes %>%
+  filter(id %in% c("id", edges_2030$from, edges_2030$to))
+
+graph3 <- tbl_graph(nodes = nodes_2030,
+                       edges = edges_2030,
+                       directed = TRUE)
+
+g3 <- ggraph(graph3, 
+            layout = "nicely") + 
+  geom_edge_link(aes(width=weights), 
+                 alpha=0.2) +
+  scale_edge_width(range = c(0.1, 5)) +
+  geom_node_point(size = 2, show.legend = FALSE)+
+  ggtitle ("2030")
+
+#Plot for 2031
+edges_2031 <- edges %>%
+  filter(Year == "2031")
+nodes_2031 <- nodes %>%
+  filter(id %in% c("id", edges_2031$from, edges_2031$to))
+
+graph4 <- tbl_graph(nodes = nodes_2031,
+                       edges = edges_2031,
+                       directed = TRUE)
+
+g4 <- ggraph(graph4, 
+            layout = "nicely") + 
+  geom_edge_link(aes(width=weights), 
+                 alpha=0.2) +
+  scale_edge_width(range = c(0.1, 5)) +
+  geom_node_point(size = 2, show.legend = FALSE)+
+  ggtitle ("2031")
+
+#Plot for 2032
+edges_2032 <- edges %>%
+  filter(Year == "2032")
+nodes_2032 <- nodes %>%
+  filter(id %in% c("id", edges_2032$from, edges_2032$to))
+
+graph5 <- tbl_graph(nodes = nodes_2032,
+                       edges = edges_2032,
+                       directed = TRUE)
+
+g5 <- ggraph(graph5, 
+            layout = "nicely") + 
+  geom_edge_link(aes(width=weights), 
+                 alpha=0.2) +
+  scale_edge_width(range = c(0.1, 5)) +
+  geom_node_point(size = 2, show.legend = FALSE)+
+  ggtitle ("2032")
+
+#Plot for 2033
+edges_2033 <- edges %>%
+  filter(Year == "2033")
+nodes_2033 <- nodes %>%
+  filter(id %in% c("id", edges_2033$from, edges_2033$to))
+
+graph6 <- tbl_graph(nodes = nodes_2033,
+                       edges = edges_2033,
+                       directed = TRUE)
+
+g6 <- ggraph(graph6, 
+            layout = "nicely") + 
+  geom_edge_link(aes(width=weights), 
+                 alpha=0.2) +
+  scale_edge_width(range = c(0.1, 5)) +
+  geom_node_point(size = 2, show.legend = FALSE)+
+  ggtitle ("2033")
+
+#Plot for 2034
+edges_2034 <- edges %>%
+  filter(Year == "2034")
+nodes_2034 <- nodes %>%
+  filter(id %in% c("id", edges_2034$from, edges_2034$to))
+
+graph7 <- tbl_graph(nodes = nodes_2034,
+                       edges = edges_2034,
+                       directed = TRUE)
+
+g7 <- ggraph(graph7, 
+            layout = "nicely") + 
+  geom_edge_link(aes(width=weights), 
+                 alpha=0.2) +
+  scale_edge_width(range = c(0.1, 5)) +
+  geom_node_point(size = 2, show.legend = FALSE)+
+  ggtitle ("2034")
+```
+
+Let's plot the graphs after the lengthy process of filtering the data!
+
+```{r}
+#| fig.width: 20
+#| fig.height: 20
+g1 + g2 + g3 + g4 + g5 + g6 + g7
+  plot_layout(ncol=3)
 ```
 
 ```{r}
-MC1_edges <- as_tibble(MC1$links) %>%
-  select(source, target, type, weight, key)
+
+```
+
