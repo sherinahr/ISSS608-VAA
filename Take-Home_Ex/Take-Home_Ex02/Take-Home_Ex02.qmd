@@ -26,13 +26,44 @@ In line with this, this page will attempt to answer the following task under Min
 
 **Use visual analytics to identify temporal patterns for individual entities and between entities in the knowledge graph FishEye created from trade records. Categorize the types of business relationship patterns you find. Limit your response to 600 words and 6 images.**
 
+## **Datasets**
+
+The dataset used comprises two main files: (i) A graph in json format comprising 34,552 nodes and 5,464,092 directed edges and (ii) A bundle of 12 files with various edges. For this task, we will only use Dataset (i). It has the following properties:
+
+-   Nodes
+
+    -   **id:** Name of the company that originated (or received) the shipment
+
+    -   **shpcountry:** Country the company most often associated with when shipping
+
+    -   **rcvcountry:** Country the company most often associated with when receiving
+
+    -   **dataset:** All values are "MC2", referring to Mini Challenge 2
+
+-   Edges
+
+    -   **arrivaldate:** Date the shipment arrived at port in YYYY-MM-DD format
+
+    -   **hscode:** Harmonized System code for the shipment
+
+    -   **valueofgoods_omu:** Customs-declared value of the total shipment, in Oceanus Monetary Units (OMU)
+
+    -   **volumeteu:** The volume of the shipment in 'Twenty-foot equivalent units', roughly how many 20-foot standard containers would be required.
+
+    -   **weightkg:** The weight of the shipment in kilograms (if known)
+
+    -   **dataset:** All values are "MC2", referring to Mini Challenge 2
+
+    -   **type:** All values are "shipment"
+
 ## **Data Wrangling**
 
-The dataset used is from the VAST Challenge 2023. Let's first load the packages and datasets to be used.
+Let's first load the packages and datasets to be used.
 
 ```{r}
 pacman::p_load(igraph, tidygraph, ggraph, visNetwork, lubridate, clock,
-               tidyverse, graphlayouts, jsonlite, patchwork)
+               tidyverse, graphlayouts, jsonlite, patchwork, DT, zoo, ggiraph,
+               plotly)
 ```
 
 ```{r}
@@ -113,9 +144,11 @@ mc2_nodes_extracted <- rbind(id1, id2) %>%
   distinct()
 ```
 
-## **Building an overview of the network graph**
+## **Building an Overview of the Network Graph**
 
-First, we will need to prepare the data model, and to do so, we rename the source and target columns in the Edges data. Using the subsequent code chunk, we will filter the nodes from the nodes data, which only exist in the edges data, and then plot our interactive network graph using the visNetwork() function. When we look at the graph, we notice that there is a ring of disconnected mini-graphs within, but we will retain them just in case they can be useful later.
+First, we will need to prepare the data model, and to do so, we rename the source and target columns in the Edges data. Using the subsequent code chunk, we will filter the nodes from the nodes data, which only exist in the edges data, and then plot our interactive network graph using the visNetwork() function.
+
+When we look at the graph, we notice that there is a ring of disconnected components within. These are probably smaller companies which do not have much network connections with other companies. However, we will retain them just in case they are useful later.
 
 ```{r}
 mc2_edges_aggregated <- mc2_edges_aggregated %>%
@@ -124,6 +157,8 @@ mc2_edges_aggregated <- mc2_edges_aggregated %>%
   filter(from!=to) %>%
   ungroup()
 ```
+
+### Insight 1 - Companies with Extensive Networks
 
 Though the graph looks too dense to provide useful information, we can actually select the ID and note how widespread the connections of each company are. If we hover over the various nodes, we can even see that there are a few companies which have extremely extensive networks:
 
@@ -160,7 +195,7 @@ visNetwork(nodes, edges, main = "An Overview of the Network Graph") %>%
              nodesIdSelection = TRUE)  
 ```
 
-## **Visualisation of Growth by Year**
+## **Visualisation of Growth of the Network Over Time**
 
 Since we are interested in temporal patterns, let's plot the connections by year, so that we can see how the layout of the graph changes. Below is the code chunk to filter the data by each year and then create the graph using the tbl_graph() and ggraph functions.
 
@@ -293,16 +328,463 @@ g7 <- ggraph(graph7,
   ggtitle ("2034")
 ```
 
-Let's plot the graphs after the lengthy process of filtering the data!
+Let's plot the graphs after the lengthy process of filtering the data using the patchwork function so that we can see all the graphs in one figure.
+
+### Insight 2 - Change in Networks Over Time
+
+As we analyse how the graphs change from 2028 to 2034, we can note the following:
+
+-   The disconnected components undergo quite a change over the years - though most are in connections of 2-3 nodes in 2028, they expand to other nodes over the next few years, but then return to being disconnected after 2031. Possibly, these companies did have more shipments to other companies as the years went by, but over time these went back to the usual frequency of shipments.
+
+-   When we look at the density of the nodes, visually they seem to increase over time i.e., the number of shipping companies increase over the years.
+
+-   Looking at the edges, there's 2 interesting things that change over time:
+
+    -   The number of edges seem to increase over time i.e., more companies have shipments with each other as the years go by.
+
+    -   The weight of the edges also increase over time. For example, in 2028 there is only one thick weighted edge of 400, whereas as the years go by, the magnitude of the weight increases to 600, and there are more weighted edges as well i.e., the frequency of shipments have increased over time for certain companies.
 
 ```{r}
 #| fig.width: 20
 #| fig.height: 20
-g1 + g2 + g3 + g4 + g5 + g6 + g7
+g1 + g2 + g3 + g4 + g5 + g6 + g7 +
   plot_layout(ncol=3)
 ```
 
+## **Shipping Patterns Over Time**
+
+Before we delve into the details of specific shipping patterns (e.g., imports/exports), let's look at the overall shipping patterns over time. For this, we will summarise the data by the year.
+
 ```{r}
+#Group the data
+summary_shipments <- edges %>%
+  group_by(Year) %>%
+  summarize(total_freq = sum(weights)) %>%
+  ungroup() 
+
+#Transform the Year to date format
+summary_shipments<- summary_shipments %>%
+  mutate (Year = as.yearmon(Year))
+summary_shipments <- transform(summary_shipments, Year = as.Date(Year, frac = 0))
+
+
+# Check the updated summary_yearmonth data
+print(summary_shipments)
+```
+
+### Insight 3 - Increase in Shipments Frequency Over Time
+
+From the graph, we can see that there is an overall increasing trend - shipments have been increasing in frequency from 8228 in 2028, to 18,098 in 2034. The steepest increase was from 2031 to 2032 - this sudden sharp increase could indicate possible illegal fishing occurring in 2032. However, since this is aggregated data, we are not able to glean further detailed insights. The subsequent section will try explore the topmost exports and imports to see if there are any trends.
+
+::: callout-note
+This is an interactive line graph. Hover over a point to see the X and Y coordinates!
+:::
+
+```{r}
+s1 <- ggplot(summary_shipments, aes(x = Year)) +
+  geom_line(aes(y = total_freq, color = "Total"), size = 0.5) +
+  labs(x = "Year",
+       y = "Number of Shipments") +
+  scale_color_manual(values = c("Total" = "salmon")) +
+  theme_classic() +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  ggtitle("Total Number of Shipments (2028-2034)")
+
+#Convert to interactive line graph and hide legend
+s1 <- ggplotly(s1, tooltip = c("x", "y"))
+s1 <- s1 %>% 
+  layout(showlegend = FALSE)
+s1
+```
+
+## **Calculating the Centrality of the Graph**
+
+Centrality measures are among the most widely used indices based on network data, as they reflect a node's importance in a network. There are different types of centrality such as closeness, degree, betweenness, and eigenvector. For this task, we will focus on degree and betweenness centrality.
+
+A node's degree is a count of how many edges it has, and thus the degree centrality for a node is simply its degree. In a directed graph, there is an in-degree (edges pointing TO the node), and an out-degree (edges pointing FROM the node).
+
+The betweenness centrality on the other hand, is a bit more complex - it captures the extent to which a certain node allows information to flow from one part of the network to the other i.e., how important is a node in bridging different nodes together?
+
+We will use the following code chunk to calculate the abovementioned two centrality measures.
+
+```{r}
+#Create the network graph 
+centrality_graph<- tbl_graph(nodes=nodes,
+                          edges = edges,
+                          directed = TRUE)
+
+#Calculate the centrality measures
+centrality_graph<- centrality_graph %>%
+  activate("nodes") %>% 
+  mutate(betweenness_centrality = centrality_betweenness(directed = TRUE)) %>% 
+  mutate(in_deg_centrality = centrality_degree(weights = weights, 
+                                               mode = "in")) %>% 
+  mutate(out_deg_centrality = centrality_degree(weights = weights, 
+                                               mode = "out"))
+```
+
+### **Degree Centrality**
+
+### Insight 4 - Top 10 Imports
+
+Let's summarise the top 10 nodes which have the highest centrality for in-degree. These are the companies which have the most imports from other companies. Knowing this information can help us detect illegal fishing in a few ways:
+
+-   Since certain regions/countries may have a higher prevalence of IUU fishing due to weak regulations, examining the import patterns can identify companies that consistently source seafood from these high-risk regions.
+
+-   This information can be shared with other governments, enforcement agencies, and industry stakeholders to check if these companies also have similarly significant number of imports.
+
+-   Officials can track the seafood supply chain for these companies so as to identify any potential gaps or discrepancies in the supply chain.
+
+```{r}
+indeg_graph<- centrality_graph %>% 
+  activate("nodes") %>% 
+  as_tibble() %>% 
+  arrange(desc(in_deg_centrality)) %>% 
+  select(id,in_deg_centrality) %>% 
+  head(n=10)
+
+
+DT::datatable(indeg_graph, class = "compact", colnames = c("Name of Company","In-Degree Centrality"),
+              caption = 'Table 1: Top 10 Companies by In-Degree')
 
 ```
 
+### Insight 5 - Top 10 Exports
+
+Let's summarise the top 10 nodes which have the highest centrality for out-degree. These are the companies which carry out the most exports. Knowing this information can help us detect illegal fishing in a few ways:
+
+-   Monitoring and oversight can be focused on these high-volume exporters, as they may have a higher risk of being involved in illegal fishing or trading of illicit seafood products.
+
+-   We can delve deeper into the export patterns to identify the regions and countries these companies are exporting to, and identify if there are any areas where illegal fishing practices may be more prevalent.
+
+-   Knowing which companies export the most provide officials an opportunity to be able to scrutinize their records, so that they can check if the companies are compliant with regulations, such as catch documentation schemes or sustainability certifications. This will prevent the trade of illegally caught or unreported seafood.
+
+```{r}
+outdeg_graph<- centrality_graph %>% 
+  activate("nodes") %>% 
+  as_tibble() %>% 
+  arrange(desc(out_deg_centrality)) %>% 
+  select(id,out_deg_centrality) %>% 
+  head(n=10)
+
+
+DT::datatable(outdeg_graph, class = "compact", colnames = c("Name of Company","Out-Degree Centrality"),
+              caption = 'Table 2: Top 10 Companies by Out-Degree')
+
+```
+
+### **Betweenness Centrality**
+
+Let's summarise the top 10 nodes which have the highest centrality for betweenness centrality.
+
+### Insight 6 - Connected Graph
+
+Interestingly, only one company has a value of 1 and the rest are 0. Having a 0 betweenness centrality means that the graph is a complete one i.e., all nodes are connected to all others and thus there is no one node which enables better information flow than others. It seems as if the disconnected components are not regarded in the calculation.
+
+This means that all the shipping companies have a connection with each other through their imports/exports. Regretably, this may helps to increase the risk of IUU, as complex and fragmented supply chains involving multiple shipping companies can make it difficult to trace the origin of seafood products, thus making it challenging for authorities to identify and intercept illegal catches.
+
+```{r}
+btwness_graph<- centrality_graph %>% 
+  activate("nodes") %>% 
+  as_tibble() %>% 
+  arrange(desc(betweenness_centrality)) %>% 
+  select(id,betweenness_centrality) %>% 
+  head(n=10)
+
+
+DT::datatable(btwness_graph, class = "compact", colnames = c("Name of Company","Betweenness Centrality"),
+              caption = 'Table 3: Top 10 Companies by Betweenness Centrality')
+
+```
+
+## **Visualising the Centrality of the Graph**
+
+Now that we know the shipping companies with the highest number of imports and exports, let's map their networks to see how the network graph looks like.
+
+### **Network of Company with Highest Number of Imports**
+
+### **Network of Company with Highest Number of Exports**
+
+## **Plotting the Shipping Patterns for Highest Imports - Mar del Este CJSC**
+
+Our last task is to look at the shipping pattern of the shipping companies with the highest number of imports and exports.
+
+First, let's filter the data to only elicit the company with the highest number of imports, Mar del Este CJSC. We will also arrange the dataset in descending order by weights to see the company which has the highest imports to Mar del. Then we will change the Year column to be in a date format as it is currently in numeric form.
+
+```{r}
+
+#Filter the dataset & arrange in descending order of weights
+Mardel<- mc2_edges_aggregated %>%
+  filter(to %in% 'Mar del Este CJSC') %>%
+  arrange(desc(weights))
+
+#Change the date format
+Mardel2<- Mardel %>%
+  mutate (Year = as.yearmon(Year))
+Mardel2 <- transform(Mardel2, Year = as.Date(Year, frac = 0))
+
+```
+
+We will then plot a line graph to see the time series trends of shipment for this company. The company has received imports from many companies, but we are only interested in looking at the companies with perhaps the 5 highest imports to Mar del. Thus we will plot the graphs for only these 5 companies. We filter the data by referring to the tibble dataset above.
+
+### Insight 7 - Mar del's Main Partners
+
+Looking at the plot, we can see that there is quite a large fluctuation in the frequency of shipments over the years for all 5 companies' shipments to Mar del. While the frequency is increasing for Wave Watchers, the others are all decreasing. Specifically, Tristen Jetty, Ola de la Costa and Blue Horizon reach a peak in 2033 and then decrease sharply in 2034. It is possible that Mar del has stopped accepting shipments from them and now considers Wave Watchers as its main supplier/partner.
+
+However, we cannot definitively classify this as a red or green flag for IUU, as Mar del may have had its reasons for shifting to Wave Watchers, such as reliability, quality, or cost. To make a more accurate assessment, additional information is necessary - we may want to evaluate the reputation and track record of the companies involved, and conduct due diligence on their fishing practices, and adherence to regulations.
+
+::: panel-tabset
+## Plot
+
+```{r}
+#| echo: false
+#Wave Watchers Ltd.
+m1<- ggplot(Mardel2 %>% filter(from=='Wave Watchers Ltd. Liability Co'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Wave Watchers Ltd.', 
+       x = 'Year', y ="") 
+
+#Tristen Jetty Company Solutions
+m2<- ggplot(Mardel2 %>% filter(from=='Tristen Jetty Company Solutions'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Tristen Jetty', 
+       x = 'Year', y ="") 
+
+#Chuan gou N.V. Delivery
+m3<- ggplot(Mardel2 %>% filter(from=='Chuan gou  N.V. Delivery'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Chuan gou', 
+       x = 'Year',
+       y='Number of Imports to Mar Del') 
+
+#Ola de la Costa Ges.m.b.H.
+m4<- ggplot(Mardel2 %>% filter(from=='Ola de la Costa Ges.m.b.H.'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Ola de la Costa', 
+       x = 'Year', y ="") 
+
+#Blue Horizon Family &
+m5<- ggplot(Mardel2 %>% filter(from=='Blue Horizon Family &'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Blue Horizon Family &', 
+       x = 'Year', y ="") 
+
+girafe(code = print(m1 / m2 / m3 / m4 / m5),
+       width_svg = 6,
+       height_svg =10)
+```
+
+## Code
+
+```{r}
+#| eval: false
+#| code-fold: false
+#Wave Watchers Ltd.
+m1<- ggplot(Mardel2 %>% filter(from=='Wave Watchers Ltd. Liability Co'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Wave Watchers Ltd.', 
+       x = 'Year', y ="") 
+
+#Tristen Jetty Company Solutions
+m2<- ggplot(Mardel2 %>% filter(from=='Tristen Jetty Company Solutions'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Tristen Jetty', 
+       x = 'Year', y ="") 
+
+#Chuan gou N.V. Delivery
+m3<- ggplot(Mardel2 %>% filter(from=='Chuan gou  N.V. Delivery'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Chuan gou', 
+       x = 'Year',
+       y='Number of Imports to Mar Del') 
+
+#Ola de la Costa Ges.m.b.H.
+m4<- ggplot(Mardel2 %>% filter(from=='Ola de la Costa Ges.m.b.H.'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Ola de la Costa', 
+       x = 'Year', y ="") 
+
+#Blue Horizon Family &
+m5<- ggplot(Mardel2 %>% filter(from=='Blue Horizon Family &'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Blue Horizon Family &', 
+       x = 'Year', y ="") 
+
+girafe(code = print(m1 / m2 / m3 / m4 / m5),
+       width_svg = 6,
+       height_svg =10)
+```
+:::
+
+## **Plotting the Shipping Patterns for Highest Exports - Blue Horizon Family**
+
+Next, let's filter the data to only elicit the company with the highest number of exports, Blue Horizon Family.
+
+```{r}
+
+#Filter the dataset & arrange in descending order of weights
+Blue<- mc2_edges_aggregated %>%
+  filter(from %in% 'Blue Horizon Family &') %>%
+  arrange(desc(weights))
+
+#Change the date format
+Blue2<- Blue %>%
+  mutate (Year = as.yearmon(Year))
+Blue2 <- transform(Blue2, Year = as.Date(Year, frac = 0))
+
+```
+
+As above, we will plot the 5 highest exports from Blue Horizon Family.
+
+### Insight 8 - Blue Horizon's Main Partners
+
+Looking at the plot, we can see that there is quite a large fluctuation in the frequency of shipments over the years for all 5 companies' shipments from Blue Horizon.
+
+While the frequency is increasing for Madagascar Coast and Pao gan, the other three all peak in 2033 and then have a sharp decrease for 2024. Similar to Insight 6, it is possible that Blue Horizon now considers Madagascar Coast and Pao gan as its main supplier/partners.
+
+As above, we cannot definitively classify this as a red or green flag for IUU, and additional information is necessary to make a more accurate assessment.
+
+::: panel-tabset
+## Plot
+
+```{r}
+#| echo: false
+#Madagascar Coast AG Freight
+b1<- ggplot(Blue2 %>% filter(to=='Madagascar Coast  AG Freight '), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Madagascar Coast AG Freight', 
+       x = 'Year', y ="") 
+
+#Mar del Este CJSC
+b2<- ggplot(Blue2 %>% filter(to=='Mar del Este CJSC'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Mar del Este CJSC', 
+       x = 'Year', y ="") 
+
+#Orange River Incorporated Shipping
+b3<- ggplot(Blue2 %>% filter(to=='Orange River   Incorporated Shipping'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Orange River Incorporated Shipping', 
+       x = 'Year',
+       y='Number of Imports from Blue Horizon Family') 
+
+#Costa de la Felicidad Shipping
+b4<- ggplot(Blue2 %>% filter(to=='Costa de la Felicidad Shipping'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Costa de la Felicidad Shipping', 
+       x = 'Year', y ="") 
+
+#Pao gan SE Seal
+b5<- ggplot(Blue2 %>% filter(to=='Pao gan SE Seal'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Pao gan SE Seal', 
+       x = 'Year', y ="") 
+
+girafe(code = print(b1 / b2 / b3 / b4 / b5),
+       width_svg = 6,
+       height_svg =10)
+```
+
+## Code
+
+```{r}
+#| eval: false
+#| code-fold: false
+#Madagascar Coast AG Freight
+b1<- ggplot(Blue2 %>% filter(to=='Madagascar Coast  AG Freight '), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Madagascar Coast AG Freight', 
+       x = 'Year', y ="") 
+
+#Mar del Este CJSC
+b2<- ggplot(Blue2 %>% filter(to=='Mar del Este CJSC'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Mar del Este CJSC', 
+       x = 'Year', y ="") 
+
+#Orange River Incorporated Shipping
+b3<- ggplot(Blue2 %>% filter(to=='Orange River   Incorporated Shipping'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Orange River Incorporated Shipping', 
+       x = 'Year',
+       y='Number of Imports from Blue Horizon Family') 
+
+#Costa de la Felicidad Shipping
+b4<- ggplot(Blue2 %>% filter(to=='Costa de la Felicidad Shipping'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Costa de la Felicidad Shipping', 
+       x = 'Year', y ="") 
+
+#Pao gan SE Seal
+b5<- ggplot(Blue2 %>% filter(to=='Pao gan SE Seal'), aes(x=Year, y=weights)) +
+  geom_line( color="salmon", size = 0.8) + 
+  theme_classic()+
+  xlab("") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(title='Pao gan SE Seal', 
+       x = 'Year', y ="") 
+
+girafe(code = print(b1 / b2 / b3 / b4 / b5),
+       width_svg = 6,
+       height_svg =10)
+```
+:::
+
+## **Key Takeaways**
