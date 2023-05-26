@@ -499,15 +499,41 @@ DT::datatable(btwness_graph, class = "compact", colnames = c("Name of Company","
 
 ## **Visualising the Centrality of the Graph**
 
-Now that we know the shipping companies with the highest number of imports and exports, let's map their networks to see how the network graph looks like.
+Now that we know the shipping companies with the highest number of imports and exports, let's map their graphs to see how their networks look like, and their shipping patterns.
 
-### **Network of Company with Highest Number of Imports**
+### **Highest Number of Imports - Mar del Este CJSC**
 
-### **Network of Company with Highest Number of Exports**
+Mar del Este CJSC receives imports from a total of 44 distinct companies. Hovering over each of the edge will highlight the strength of each link, which is the frequency of the shipments to Mar del.  
+
+```{r}
+#Filter the dataset 
+Mardel_ego<- mc2_edges_aggregated %>%
+  filter(to %in% 'Mar del Este CJSC') 
+
+#Create tooltip for edges info
+Mardel_ego<- Mardel_ego %>%
+  mutate(title = paste('Strength of Link = ',weights))
+
+#Filter the dataset for nodes based on edges
+ME_nodes <- nodes %>%
+  filter(id %in% c("id", Mardel_ego$from, Mardel_ego$to))
+
+visNetwork(ME_nodes, Mardel_ego, main = "Network for Mar del") %>%
+  visIgraphLayout(layout = "layout_with_fr") %>%
+  visEdges(color=list(hover = "black"),
+  arrows = 'to',
+           smooth = list(enables = TRUE,
+                         type= 'curvedCW'),
+           shadow = FALSE,
+           dash = FALSE) %>%
+  visOptions(highlightNearest = list (enabled = TRUE, hover = TRUE),
+             nodesIdSelection = TRUE)
+
+```
 
 ## **Plotting the Shipping Patterns for Highest Imports - Mar del Este CJSC**
 
-Our last task is to look at the shipping pattern of the shipping companies with the highest number of imports and exports.
+Our next task is to look at the shipping pattern for Mar del.
 
 First, let's filter the data to only elicit the company with the highest number of imports, Mar del Este CJSC. We will also arrange the dataset in descending order by weights to see the company which has the highest imports to Mar del. Then we will change the Year column to be in a date format as it is currently in numeric form.
 
@@ -646,9 +672,40 @@ girafe(code = print(m1 / m2 / m3 / m4 / m5),
 ```
 :::
 
+
+### **Highest Number of Exports - Blue Horizon Family**
+
+Blue Horizon Family exports to 23 companies in total. Hovering over each of the edge will highlight the strength of each link, which is the frequency of the shipments from Blue Horizon  
+
+```{r}
+#Filter edge data
+Blue_ego<- mc2_edges_aggregated %>%
+  filter(from %in% 'Blue Horizon Family &') 
+
+#Create tooltip for edges info
+Blue_ego<- Blue_ego %>%
+  mutate(title = paste('Strength of Link = ',weights))
+
+#Filter the dataset for nodes based on edges
+Blue_nodes <- nodes %>%
+  filter(id %in% c("id", Blue_ego$from, Blue_ego$to))
+
+
+visNetwork(Blue_nodes, Blue_ego, main = "Network for Blue Horizon Family") %>%
+  visIgraphLayout(layout = "layout_with_fr") %>%
+  visEdges(color=list(hover = "black"), arrows = 'to',
+           smooth = list(enables = TRUE,
+                         type= 'curvedCW'),
+           shadow = FALSE,
+           dash = FALSE) %>%
+  visOptions(highlightNearest = list (enabled = TRUE, hover = TRUE),
+             nodesIdSelection = TRUE)
+
+```
+
 ## **Plotting the Shipping Patterns for Highest Exports - Blue Horizon Family**
 
-Next, let's filter the data to only elicit the company with the highest number of exports, Blue Horizon Family.
+Next, let's plot the shipping patterns using the code chunk we did as above to only elicit the company with the highest number of exports, Blue Horizon Family.
 
 ```{r}
 
@@ -663,8 +720,6 @@ Blue2<- Blue %>%
 Blue2 <- transform(Blue2, Year = as.Date(Year, frac = 0))
 
 ```
-
-As above, we will plot the 5 highest exports from Blue Horizon Family.
 
 ### Insight 8 - Blue Horizon's Main Partners
 
