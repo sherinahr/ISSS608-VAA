@@ -499,8 +499,7 @@ In the code chunk below, visOptions() is used to incorporate interactivity featu
 -   The argument highlightNearest highlights nearest when clicking a node.
 -   The argument nodesIdSelection adds an id node selection creating an HTML select element.
 
-Visit [Option](http://datastorm-open.github.io/visNetwork/options.html) to find out more about visOption’s argument.
-
+Visit [Option](http://datastorm-open.github.io/visNetwork/options.html) to find out more about visOption's argument.
 
 ```{r}
 visNetwork(GAStech_nodes,
@@ -511,9 +510,3 @@ visNetwork(GAStech_nodes,
   visLegend() %>%
   visLayout(randomSeed = 123)
 ```
-
-
-
-
-
-
