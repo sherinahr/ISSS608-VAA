@@ -142,6 +142,7 @@ id2 <- mc2_edges_aggregated %>%
   rename(id = target)
 mc2_nodes_extracted <- rbind(id1, id2) %>%
   distinct()
+
 ```
 
 ## **Building an Overview of the Network Graph**
@@ -151,7 +152,7 @@ First, we will need to prepare the data model, and to do so, we rename the sourc
 When we look at the graph, we notice that there is a ring of disconnected components within. These are probably smaller companies which do not have much network connections with other companies. However, we will retain them just in case they are useful later.
 
 ```{r}
-mc2_edges_aggregated <- mc2_edges_aggregated %>%
+mc2_edges <- mc2_edges_aggregated %>%
   rename(from = source) %>%
   rename(to = target) %>%
   filter(from!=to) %>%
@@ -179,7 +180,7 @@ Network graphs may seem overwhelming at first, especially for a large graph like
 :::
 
 ```{r}
-edges <- mc2_edges_aggregated 
+edges <- mc2_edges 
 nodes <- mc2_nodes_extracted %>%
   filter(id %in% c("id", edges$from, edges$to))
 
@@ -328,7 +329,7 @@ g7 <- ggraph(graph7,
   ggtitle ("2034")
 ```
 
-Let's plot the graphs after the lengthy process of filtering the data using the patchwork function so that we can see all the graphs in one figure.
+Let's plot the graphs below after the lengthy process of filtering the data using the patchwork function so that we can see all the graphs in one figure.
 
 ### Insight 2 - Change in Networks Over Time
 
@@ -397,7 +398,7 @@ s1 <- s1 %>%
 s1
 ```
 
-## **Calculating the Centrality of the Graph**
+## **Calculating the Centrality of the Graph - Degree Centrality**
 
 Centrality measures are among the most widely used indices based on network data, as they reflect a node's importance in a network. There are different types of centrality such as closeness, degree, betweenness, and eigenvector. For this task, we will focus on degree and betweenness centrality.
 
@@ -405,7 +406,7 @@ A node's degree is a count of how many edges it has, and thus the degree central
 
 The betweenness centrality on the other hand, is a bit more complex - it captures the extent to which a certain node allows information to flow from one part of the network to the other i.e., how important is a node in bridging different nodes together?
 
-We will use the following code chunk to calculate the abovementioned two centrality measures.
+We will use the following code chunk to calculate the abovementioned two centrality measures. First, the degree centrality.
 
 ```{r}
 #Create the network graph 
@@ -416,16 +417,11 @@ centrality_graph<- tbl_graph(nodes=nodes,
 #Calculate the centrality measures
 centrality_graph<- centrality_graph %>%
   activate("nodes") %>% 
-  mutate(betweenness_centrality = centrality_betweenness(directed = TRUE)) %>% 
   mutate(in_deg_centrality = centrality_degree(weights = weights, 
                                                mode = "in")) %>% 
   mutate(out_deg_centrality = centrality_degree(weights = weights, 
                                                mode = "out"))
 ```
-
-### **Degree Centrality**
-
-### Insight 4 - Top 10 Imports
 
 Let's summarise the top 10 nodes which have the highest centrality for in-degree. These are the companies which have the most imports from other companies. Knowing this information can help us detect illegal fishing in a few ways:
 
@@ -449,76 +445,42 @@ DT::datatable(indeg_graph, class = "compact", colnames = c("Name of Company","In
 
 ```
 
-### Insight 5 - Top 10 Exports
+### Insight 4 - Visualising Highest Number of Imports - Mar del Este CJSC
 
-Let's summarise the top 10 nodes which have the highest centrality for out-degree. These are the companies which carry out the most exports. Knowing this information can help us detect illegal fishing in a few ways:
+#### Network Graph
 
--   Monitoring and oversight can be focused on these high-volume exporters, as they may have a higher risk of being involved in illegal fishing or trading of illicit seafood products.
-
--   We can delve deeper into the export patterns to identify the regions and countries these companies are exporting to, and identify if there are any areas where illegal fishing practices may be more prevalent.
-
--   Knowing which companies export the most provide officials an opportunity to be able to scrutinize their records, so that they can check if the companies are compliant with regulations, such as catch documentation schemes or sustainability certifications. This will prevent the trade of illegally caught or unreported seafood.
-
-```{r}
-outdeg_graph<- centrality_graph %>% 
-  activate("nodes") %>% 
-  as_tibble() %>% 
-  arrange(desc(out_deg_centrality)) %>% 
-  select(id,out_deg_centrality) %>% 
-  head(n=10)
-
-
-DT::datatable(outdeg_graph, class = "compact", colnames = c("Name of Company","Out-Degree Centrality"),
-              caption = 'Table 2: Top 10 Companies by Out-Degree')
-
-```
-
-### **Betweenness Centrality**
-
-Let's summarise the top 10 nodes which have the highest centrality for betweenness centrality.
-
-### Insight 6 - Connected Graph
-
-Interestingly, only one company has a value of 1 and the rest are 0. Having a 0 betweenness centrality means that the graph is a complete one i.e., all nodes are connected to all others and thus there is no one node which enables better information flow than others. It seems as if the disconnected components are not regarded in the calculation.
-
-This means that all the shipping companies have a connection with each other through their imports/exports. Regretably, this may helps to increase the risk of IUU, as complex and fragmented supply chains involving multiple shipping companies can make it difficult to trace the origin of seafood products, thus making it challenging for authorities to identify and intercept illegal catches.
-
-```{r}
-btwness_graph<- centrality_graph %>% 
-  activate("nodes") %>% 
-  as_tibble() %>% 
-  arrange(desc(betweenness_centrality)) %>% 
-  select(id,betweenness_centrality) %>% 
-  head(n=10)
-
-
-DT::datatable(btwness_graph, class = "compact", colnames = c("Name of Company","Betweenness Centrality"),
-              caption = 'Table 3: Top 10 Companies by Betweenness Centrality')
-
-```
-
-## **Visualising the Centrality of the Graph**
-
-Now that we know the shipping companies with the highest number of imports and exports, let's map their graphs to see how their networks look like, and their shipping patterns.
-
-### **Highest Number of Imports - Mar del Este CJSC**
-
-Mar del Este CJSC receives imports from a total of 44 distinct companies. Hovering over each of the edge will highlight the strength of each link, which is the frequency of the shipments to Mar del.  
+Let's map the graph of the company with highest imports to see how its networks look like, and their shipping patterns. We need to aggregate the edges such that the frequency of shipments are collapsed over the years, as per the following code chunk.
 
 ```{r}
 #Filter the dataset 
-Mardel_ego<- mc2_edges_aggregated %>%
+Mardel_ego<- mc2_edges %>%
   filter(to %in% 'Mar del Este CJSC') 
 
+#Group by from and to, to collapse across the years
+Mardel_ego_agg <- Mardel_ego %>%
+  group_by(from, to) %>%
+  summarise(sumweights = sum(weights), .groups = 'drop') %>%
+  filter(from != to) %>%
+  arrange(desc(sumweights)) %>%
+  ungroup() 
+
+#Check the data!
+Mardel_ego_agg
+```
+
+Mar del Este CJSC receives imports from a total of 44 distinct companies. Hovering over each of the edge will highlight the strength of each link, which is the frequency of the shipments from each company to Mar del. Select the following top 3 companies to see their total frequency of shipping - Wave Watchers, Tristen Jetty and Chuan gou!
+
+```{r}
+
 #Create tooltip for edges info
-Mardel_ego<- Mardel_ego %>%
-  mutate(title = paste('Strength of Link = ',weights))
+Mardel_ego_agg<- Mardel_ego_agg %>%
+  mutate(title = paste('Strength of Link = ',sumweights))
 
 #Filter the dataset for nodes based on edges
 ME_nodes <- nodes %>%
-  filter(id %in% c("id", Mardel_ego$from, Mardel_ego$to))
+  filter(id %in% c("id", Mardel_ego_agg$from, Mardel_ego_agg$to))
 
-visNetwork(ME_nodes, Mardel_ego, main = "Network for Mar del") %>%
+visNetwork(ME_nodes, Mardel_ego_agg, main = "Network for Mar del") %>%
   visIgraphLayout(layout = "layout_with_fr") %>%
   visEdges(color=list(hover = "black"),
   arrows = 'to',
@@ -531,16 +493,18 @@ visNetwork(ME_nodes, Mardel_ego, main = "Network for Mar del") %>%
 
 ```
 
-## **Plotting the Shipping Patterns for Highest Imports - Mar del Este CJSC**
+#### Shipping Patterns
 
-Our next task is to look at the shipping pattern for Mar del.
+Let's now look at the shipping pattern for Mar del.
 
 First, let's filter the data to only elicit the company with the highest number of imports, Mar del Este CJSC. We will also arrange the dataset in descending order by weights to see the company which has the highest imports to Mar del. Then we will change the Year column to be in a date format as it is currently in numeric form.
+
+We will then plot a line graph to see the time series trends of shipment for this company. The company has received imports from many companies, but we are only interested in looking at the companies with perhaps the 5 highest imports to Mar del. Thus we will plot the graphs for only these 5 companies. We filter the data by referring to the tibble dataset above.
 
 ```{r}
 
 #Filter the dataset & arrange in descending order of weights
-Mardel<- mc2_edges_aggregated %>%
+Mardel<- mc2_edges %>%
   filter(to %in% 'Mar del Este CJSC') %>%
   arrange(desc(weights))
 
@@ -550,10 +514,6 @@ Mardel2<- Mardel %>%
 Mardel2 <- transform(Mardel2, Year = as.Date(Year, frac = 0))
 
 ```
-
-We will then plot a line graph to see the time series trends of shipment for this company. The company has received imports from many companies, but we are only interested in looking at the companies with perhaps the 5 highest imports to Mar del. Thus we will plot the graphs for only these 5 companies. We filter the data by referring to the tibble dataset above.
-
-### Insight 7 - Mar del's Main Partners
 
 Looking at the plot, we can see that there is quite a large fluctuation in the frequency of shipments over the years for all 5 companies' shipments to Mar del. While the frequency is increasing for Wave Watchers, the others are all decreasing. Specifically, Tristen Jetty, Ola de la Costa and Blue Horizon reach a peak in 2033 and then decrease sharply in 2034. It is possible that Mar del has stopped accepting shipments from them and now considers Wave Watchers as its main supplier/partner.
 
@@ -672,26 +632,66 @@ girafe(code = print(m1 / m2 / m3 / m4 / m5),
 ```
 :::
 
+### Insight 5 - Visualising Highest Number of Exports - Blue Horizon Family
 
-### **Highest Number of Exports - Blue Horizon Family**
+#### Network Graph
 
-Blue Horizon Family exports to 23 companies in total. Hovering over each of the edge will highlight the strength of each link, which is the frequency of the shipments from Blue Horizon  
+Let's summarise the top 10 nodes which have the highest centrality for out-degree. These are the companies which carry out the most exports. Knowing this information can help us detect illegal fishing in a few ways:
+
+-   Monitoring and oversight can be focused on these high-volume exporters, as they may have a higher risk of being involved in illegal fishing or trading of illicit seafood products.
+
+-   We can delve deeper into the export patterns to identify the regions and countries these companies are exporting to, and identify if there are any areas where illegal fishing practices may be more prevalent.
+
+-   Knowing which companies export the most provide officials an opportunity to be able to scrutinize their records, so that they can check if the companies are compliant with regulations, such as catch documentation schemes or sustainability certifications. This will prevent the trade of illegally caught or unreported seafood.
 
 ```{r}
+outdeg_graph<- centrality_graph %>% 
+  activate("nodes") %>% 
+  as_tibble() %>% 
+  arrange(desc(out_deg_centrality)) %>% 
+  select(id,out_deg_centrality) %>% 
+  head(n=10)
+
+
+DT::datatable(outdeg_graph, class = "compact", colnames = c("Name of Company","Out-Degree Centrality"),
+              caption = 'Table 2: Top 10 Companies by Out-Degree')
+
+```
+
+As with Mar del, let's map the graph of the company with highest exports to see how its networks look like, and their shipping patterns. We need to aggregate the edges such that the frequency of shipments are collapsed over the years, as per the following code chunk.
+
+```{r}
+
 #Filter edge data
-Blue_ego<- mc2_edges_aggregated %>%
+Blue_ego<- mc2_edges %>%
   filter(from %in% 'Blue Horizon Family &') 
 
+#Group by from and to, to collapse across the years
+Blue_ego_agg <- Blue_ego %>%
+  group_by(from, to) %>%
+  summarise(sumweights = sum(weights), .groups = 'drop') %>%
+  filter(from != to) %>%
+  arrange(desc(sumweights)) %>%
+  ungroup() 
+
+#Check the data!
+Blue_ego_agg
+```
+
+Blue Horizon Family exports to 23 companies in total. Hovering over each of the edge will highlight the strength of each link, which is the total frequency of the shipments from Blue Horizon to each company. Select the following top 3 companies to see their total frequency of shipping - Madagascar Coast, Mar del and Costa de la Felicidad!
+
+```{r}
+
 #Create tooltip for edges info
-Blue_ego<- Blue_ego %>%
-  mutate(title = paste('Strength of Link = ',weights))
+Blue_ego_agg<- Blue_ego_agg %>%
+  mutate(title = paste('Strength of Link = ',sumweights))
 
 #Filter the dataset for nodes based on edges
 Blue_nodes <- nodes %>%
-  filter(id %in% c("id", Blue_ego$from, Blue_ego$to))
+  filter(id %in% c("id", Blue_ego_agg$from, Blue_ego_agg$to))
 
 
-visNetwork(Blue_nodes, Blue_ego, main = "Network for Blue Horizon Family") %>%
+visNetwork(Blue_nodes, Blue_ego_agg, main = "Network for Blue Horizon Family") %>%
   visIgraphLayout(layout = "layout_with_fr") %>%
   visEdges(color=list(hover = "black"), arrows = 'to',
            smooth = list(enables = TRUE,
@@ -703,14 +703,14 @@ visNetwork(Blue_nodes, Blue_ego, main = "Network for Blue Horizon Family") %>%
 
 ```
 
-## **Plotting the Shipping Patterns for Highest Exports - Blue Horizon Family**
+#### Shipping Patterns
 
-Next, let's plot the shipping patterns using the code chunk we did as above to only elicit the company with the highest number of exports, Blue Horizon Family.
+Let's now look at the shipping pattern using the code chunk we did as above to only elicit the company with the highest number of exports, Blue Horizon Family.
 
 ```{r}
 
 #Filter the dataset & arrange in descending order of weights
-Blue<- mc2_edges_aggregated %>%
+Blue<- mc2_edges %>%
   filter(from %in% 'Blue Horizon Family &') %>%
   arrange(desc(weights))
 
@@ -720,8 +720,6 @@ Blue2<- Blue %>%
 Blue2 <- transform(Blue2, Year = as.Date(Year, frac = 0))
 
 ```
-
-### Insight 8 - Blue Horizon's Main Partners
 
 Looking at the plot, we can see that there is quite a large fluctuation in the frequency of shipments over the years for all 5 companies' shipments from Blue Horizon.
 
@@ -842,4 +840,54 @@ girafe(code = print(b1 / b2 / b3 / b4 / b5),
 ```
 :::
 
+## **Calculating the Centrality of the Graph - Betweenness Centrality**
+
+### Insight 6 - Visualising Highest Number of Betweenness
+
+We will use the following code chunk to calculate the betweenness centrality measure.
+
+```{r}
+#Create the network graph 
+btw_graph<- tbl_graph(nodes= mc2_nodes_extracted,
+                          edges = mc2_edges_aggregated,
+                          directed = TRUE)
+
+#Calculate the centrality measures
+btw_graph<- btw_graph %>%
+  activate("nodes") %>% 
+  mutate(betweenness_centrality = centrality_betweenness(directed = TRUE))
+```
+
+Let's summarise the top 10 nodes which have the highest centrality for betweenness centrality.
+
+Interestingly, only one company has a value of 1 and the rest are 0. Usually, having a 0 betweenness centrality means that the graph is a complete one i.e., all nodes are connected to all others and thus there is no one node which enables better information flow than others.
+
+However, this is not logical as not all companies would be shipping to each other! Looking back at our data wrangling portion, it seems that filtering our *edges* file to only 1 HSCode may have strictly limited the number of nodes and edges. Thus by chance, the resulting graph was not one which had betweenness centrality.
+
+::: callout-note
+At this point, it is wise to return to the data wrangling stage to include more HSCodes explore this. However, as this would affect the entire analysis, we will try again another time! :)
+:::
+
+```{r}
+
+btw_graph<- btw_graph %>% 
+  activate("nodes") %>% 
+  as_tibble() %>% 
+  arrange(desc(betweenness_centrality)) %>% 
+  select(id,betweenness_centrality) %>% 
+  head(n=10)
+
+DT::datatable(btw_graph, class = "compact", colnames = c("Name of Company","Betweenness Centrality"),
+              caption = 'Table 3: Top 10 Companies by Betweenness Centrality')
+
+```
+
 ## **Key Takeaways**
+
+The analyses have provided the following key takeaways:
+
+1.  Looking at the overall data, quite alot of companies had low betweenness, and in and out degree centrality. It's possible that the shipment networks in this industry is quite sparse and potentially disconnected.
+
+2.  Over time, there has been a growth in the shipping networks in terms of connections built, and the frequency of shipments. It is worth monitoring the rate of growth so as to earmark sudden increases for potential IUU.
+
+3.  The companies with the highest imports and exports are possible the biggest stakeholders of this industry, as they are receiving (i.e., buyer) or shipping (i.e., supplier) the most. We also plotted their 5 top partners. Though we could not definitively classify them as red/green flags for IUU, it invites great opportunities for more analysis - we may wish to zoom into the trading patterns, changes in weight of the shipments over time, as well as possibly look at communities within the companies and their behaviours. This can help to improve detection of IUU.
