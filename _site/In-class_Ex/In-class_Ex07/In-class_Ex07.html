@@ -9,7 +9,7 @@
 <meta name="author" content="Sherinah Rashid">
 <meta name="dcterms.date" content="2023-05-05">
 
-<title>ISSS608 - Sherinah Rashid - In-class_Ex04</title>
+<title>ISSS608 - Sherinah Rashid - In-class_Ex07</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -250,17 +250,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#import-libraries" id="toc-import-libraries" class="nav-link active" data-scroll-target="#import-libraries">Import libraries</a></li>
-  <li><a href="#background-info" id="toc-background-info" class="nav-link" data-scroll-target="#background-info">Background info</a>
-  <ul class="collapse">
-  <li><a href="#the-anderson_darling-test" id="toc-the-anderson_darling-test" class="nav-link" data-scroll-target="#the-anderson_darling-test">The Anderson_darling test</a></li>
-  <li><a href="#the-shapiro.test" id="toc-the-shapiro.test" class="nav-link" data-scroll-target="#the-shapiro.test">The shapiro.test</a></li>
-  <li><a href="#qqplot" id="toc-qqplot" class="nav-link" data-scroll-target="#qqplot">QQplot</a></li>
-  </ul></li>
-  <li><a href="#task-for-today" id="toc-task-for-today" class="nav-link" data-scroll-target="#task-for-today">Task for today:</a>
-  <ul class="collapse">
-  <li><a href="#combine-qqplot-with-results-from-shapiro-test." id="toc-combine-qqplot-with-results-from-shapiro-test." class="nav-link" data-scroll-target="#combine-qqplot-with-results-from-shapiro-test.">Combine qqplot with results from Shapiro-test.</a></li>
-  </ul></li>
+  <li><a href="#import-the-r-packages" id="toc-import-the-r-packages" class="nav-link active" data-scroll-target="#import-the-r-packages">Import the R Packages</a></li>
+  <li><a href="#loading-the-dataset" id="toc-loading-the-dataset" class="nav-link" data-scroll-target="#loading-the-dataset">Loading the dataset</a></li>
+  <li><a href="#plotting-the-horizon-graph" id="toc-plotting-the-horizon-graph" class="nav-link" data-scroll-target="#plotting-the-horizon-graph">Plotting the horizon graph</a></li>
   </ul>
 </nav>
     </div>
@@ -269,7 +261,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">In-class_Ex04</h1>
+<h1 class="title">In-class_Ex07</h1>
 </div>
 
 
@@ -290,140 +282,88 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     </div>
   </div>
   
-    <div>
-    <div class="quarto-title-meta-heading">Modified</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date-modified">May 7, 2023</p>
-    </div>
-  </div>
     
   </div>
   
 
 </header>
 
-<p>In today’s in class exercise, Prof shared with us how to combine a qqplot and tabular results of Shapiro test in a single plot.</p>
-<section id="import-libraries" class="level2">
-<h2 class="anchored" data-anchor-id="import-libraries">Import libraries</h2>
-<p>The new libraries used today are :</p>
-<ul>
-<li><p><a href="https://rpkgs.datanovia.com/rstatix/">rstatic</a>: Allows us to perform basic statistical tests, including t-test, Wilcoxon test, ANOVA, Kruskal-Wallis and correlation analyses.</p></li>
-<li><p><a href="https://gt.rstudio.com/">gt()</a> : starting from a tibble table, customise a table and export in various formats. Most importantly, it works with patch. We will save the tabular results from shapiro test as gt object and export using gtsave() into .png file later.</p>
-<p>Note:</p></li>
-<li><p>Importing tidyverse: will automatically provide read_r() &lt;- for read_csv()</p></li>
-</ul>
+<p>In today’s in class exercise, Prof shared with us how to plot a horizon graph.</p>
+<p>A horizon graph is an analytical graphical method specially designed for visualising large numbers of time-series. It aims to overcome the issue of visualising highly overlapping time-series.</p>
+<p>In this section, you will learn how to plot a <a href="http://www.perceptualedge.com/articles/visual_business_intelligence/time_on_the_horizon.pdf">horizon graph</a> by using <a href="https://rivasiker.github.io/ggHoriPlot/">ggHoriPlot package</a>.</p>
+<section id="import-the-r-packages" class="level1">
+<h1>Import the R Packages</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(rstatix, gt, patchwork,tidyverse,nortest,webshot2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>exam <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">'data/Exam_data.csv'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details>
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(ggHoriPlot, ggthemes, tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
-<section id="background-info" class="level2">
-<h2 class="anchored" data-anchor-id="background-info">Background info</h2>
-<section id="the-anderson_darling-test" class="level3">
-<h3 class="anchored" data-anchor-id="the-anderson_darling-test">The Anderson_darling test</h3>
-<p>Usually, when we check for normality of a distribution, we can use the Anderson-darling test or the Shapiro test. Hitting the three commands below will give us the results, but no visualisation.</p>
+<section id="loading-the-dataset" class="level1">
+<h1>Loading the dataset</h1>
+<p>For the purpose of this hands-on exercise, <a href="https://tablebuilder.singstat.gov.sg/table/TS/M212891">Average Retail Prices Of Selected Consumer Items</a> will be used.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ad.test</span>(exam<span class="sc">$</span>ENGLISH)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-    Anderson-Darling normality test
-
-data:  exam$ENGLISH
-A = 4.3661, p-value = 7.341e-11</code></pre>
+<details>
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>averp <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/AVERP.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">Date</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">dmy</span>(<span class="st">`</span><span class="at">Date</span><span class="st">`</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="callout-note callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Note
 </div>
 </div>
-</section>
-<section id="the-shapiro.test" class="level3">
-<h3 class="anchored" data-anchor-id="the-shapiro.test">The shapiro.test</h3>
-<p>Using shapiro.test will generate result as a HTML object.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shapiro.test</span>(exam<span class="sc">$</span>ENGLISH)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-    Shapiro-Wilk normality test
-
-data:  exam$ENGLISH
-W = 0.9543, p-value = 1.811e-08</code></pre>
-</div>
-</div>
-<p>Using shapiro_test will generate result as a tibble object.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>exam <span class="sc">%&gt;%</span> </span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">shapiro_test</span>(ENGLISH)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 3
-  variable statistic            p
-  &lt;chr&gt;        &lt;dbl&gt;        &lt;dbl&gt;
-1 ENGLISH      0.954 0.0000000181</code></pre>
+<div class="callout-body-container callout-body">
+<p>By default, read_csv will import data in Date field as Character data type. dmy() of lubridate package to parse the Date field into appropriate Date data type in R.</p>
 </div>
 </div>
 </section>
-<section id="qqplot" class="level3">
-<h3 class="anchored" data-anchor-id="qqplot">QQplot</h3>
-<p>We can also generate the qqplot to check for normality. However qqplot does not print any p-values.</p>
+<section id="plotting-the-horizon-graph" class="level1">
+<h1>Plotting the horizon graph</h1>
+<p>Note that there is no output for the below code chunk! Refer to the in-line comments for the logic behind the code.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(exam,</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">sample=</span>ENGLISH)) <span class="sc">+</span>  <span class="co">#&lt;&lt;&lt; use a new argument call sample: el scores</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq</span>() <span class="sc">+</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq_line</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details>
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>averp <span class="sc">%&gt;%</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#filter the data as necessary</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Date <span class="sc">&gt;=</span> <span class="st">"2018-01-01"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">#we want to ensure only the filtered data will be placed into ggplot, so we do the above first before coding the line below</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_horizon</span>(<span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y=</span>Values), </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">origin =</span> <span class="st">"midpoint"</span>, </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>               <span class="at">horizonscale =</span> <span class="dv">6</span>)<span class="sc">+</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#we placed in ` because there's a space in the csv file for the header! So we put in the ` to ensure that it recognises as one field name. The ~ is to state it as a facet grid. </span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="st">`</span><span class="at">Consumer Items</span><span class="st">`</span><span class="sc">~</span>.) <span class="sc">+</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_few</span>() <span class="sc">+</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_hcl</span>(<span class="at">palette =</span> <span class="st">'BuPu'</span>) <span class="sc">+</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.spacing.y=</span><span class="fu">unit</span>(<span class="dv">0</span>, <span class="st">"lines"</span>), <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">5</span>, <span class="at">angle =</span> <span class="dv">0</span>, <span class="at">hjust =</span> <span class="dv">0</span>),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">'none'</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">7</span>),</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.ticks.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.border =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_date</span>(<span class="at">expand=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>), <span class="at">date_breaks =</span> <span class="st">"3 month"</span>, <span class="at">date_labels =</span> <span class="st">"%b%y"</span>) <span class="sc">+</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">'Average Retail Prices of Selected Consumer Items (Jan 2018 to Dec 2022)'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
-<p><img src="In-class_Ex04_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-</section>
-</section>
-<section id="task-for-today" class="level2">
-<h2 class="anchored" data-anchor-id="task-for-today">Task for today:</h2>
-<section id="combine-qqplot-with-results-from-shapiro-test." class="level3">
-<h3 class="anchored" data-anchor-id="combine-qqplot-with-results-from-shapiro-test.">Combine qqplot with results from Shapiro-test.</h3>
-<p>Recall that in hands-on 3, we use DT to create an interactive table , however it is not recognized by patchwork.</p>
-<p>We start by storing the shapiro test in a tibble table as shown above. Then we will use the <a href="https://gt.rstudio.com/">gt()</a> package and export it as a .png using gtsave().</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>qq <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(exam,</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">sample=</span>ENGLISH)) <span class="sc">+</span>  <span class="co">#&lt;&lt;&lt; use a new argument call sample: el scores</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq</span>() <span class="sc">+</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq_line</span>()</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>sw_t <span class="ot">&lt;-</span> exam <span class="sc">%&gt;%</span> </span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">shapiro_test</span>(ENGLISH) <span class="sc">%&gt;%</span> <span class="fu">gt</span>()   <span class="co">#&lt;&lt;&lt; make into a gt format (will give a nice table)  shapiro.test is not used here as it gives output in another format.</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="at">fileext =</span> <span class="st">'.png'</span>) <span class="co"># create  temp table</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">gtsave</span>(sw_t, tmp)  <span class="co"># use gtsave() to save sw_t into tmp folder</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>table_png <span class="ot">&lt;-</span> png<span class="sc">::</span><span class="fu">readPNG</span>(tmp, <span class="at">native =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>qq<span class="sc">+</span>table_png</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="In-class_Ex04_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="576"></p>
+
 </div>
-</div>
-<p>I tried to customise the gt() table.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>qq <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(exam,</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">sample=</span>ENGLISH)) <span class="sc">+</span>  <span class="co">#&lt;&lt;&lt; use a new argument call sample: el scores</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq</span>() <span class="sc">+</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq_line</span>()</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>sw_t <span class="ot">&lt;-</span> exam <span class="sc">%&gt;%</span> </span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">shapiro_test</span>(ENGLISH) <span class="sc">%&gt;%</span> <span class="fu">gt</span>()  <span class="sc">%&gt;%</span>  </span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">'Shapiro Test for Normality'</span>,</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">'English scores'</span>)</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="at">fileext =</span> <span class="st">'.png'</span>) <span class="co"># create  temp table</span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="fu">gtsave</span>(sw_t, tmp)  <span class="co"># use gtsave() to save sw_t into tmp folder</span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>table_png <span class="ot">&lt;-</span> png<span class="sc">::</span><span class="fu">readPNG</span>(tmp, <span class="at">native =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>qq<span class="sc">+</span>table_png  <span class="co"># use patchwork to stitch</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="In-class_Ex04_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="576"></p>
-</div>
-</div>
-<p>The results of the Shapiro test shows that p-value &lt; 0.05 and we have enough statistical evidence to reject the null hypothesis and conclude that English scores do not follow normal distribution.</p>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

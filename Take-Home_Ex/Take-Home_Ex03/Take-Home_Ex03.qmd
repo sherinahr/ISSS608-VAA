@@ -1,0 +1,22 @@
+---
+title: "Take Home Exercise 3"
+author: "Sherinah Rashid"
+date: '5 May 2023'
+editor: visual
+format:
+  html: 
+    code-fold: true
+    code-summary: "Show code"
+    code-overflow: wrap
+    code-block-bg: true
+    code-block-border-left: "#18661c"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  freeze: auto
+---
+
+
+
+
