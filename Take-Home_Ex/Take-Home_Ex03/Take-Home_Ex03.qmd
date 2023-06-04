@@ -17,6 +17,24 @@ execute:
   freeze: auto
 ---
 
+Refer to his kickstarter!
+
+```{r}
+pacman::p_load(jsonlite)
+```
 
 
+```{r}
+mc3_data <- fromJSON("data/MC3.json")
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
 

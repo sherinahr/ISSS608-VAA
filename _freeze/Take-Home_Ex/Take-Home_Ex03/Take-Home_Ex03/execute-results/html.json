@@ -1,0 +1,14 @@
+{
+  "hash": "7215821816b81defa32b108cc9c83eaf",
+  "result": {
+    "markdown": "---\ntitle: \"Take Home Exercise 3\"\nauthor: \"Sherinah Rashid\"\ndate: '5 May 2023'\neditor: visual\nformat:\n  html: \n    code-fold: true\n    code-summary: \"Show code\"\n    code-overflow: wrap\n    code-block-bg: true\n    code-block-border-left: \"#18661c\"\nexecute:\n  eval: true\n  echo: true\n  warning: false\n  freeze: auto\n---\n\n\nRefer to his kickstarter!\n\n\n::: {.cell}\n\n```{.r .cell-code}\npacman::p_load(jsonlite)\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\nmc3_data <- fromJSON(\"data/MC3.json\")\n```\n:::\n\n::: {.cell}\n\n:::\n\n::: {.cell}\n\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
