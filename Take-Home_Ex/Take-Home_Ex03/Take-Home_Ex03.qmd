@@ -17,24 +17,20 @@ execute:
   freeze: auto
 ---
 
-Refer to his kickstarter!
+Refer to his kickstarter! This is for MC3, Subtask 1!
 
 ```{r}
 pacman::p_load(jsonlite)
 ```
 
-
 ```{r}
 mc3_data <- fromJSON("data/MC3.json")
 ```
 
-
 ```{r}
 
 ```
 
-
 ```{r}
 
 ```
-

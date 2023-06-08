@@ -711,7 +711,7 @@
     "href": "Take-Home_Ex/Take-Home_Ex03/Take-Home_Ex03.html",
     "title": "Take Home Exercise 3",
     "section": "",
-    "text": "Refer to his kickstarter!\n\n\nShow code\npacman::p_load(jsonlite)\n\n\n\n\nShow code\nmc3_data <- fromJSON(\"data/MC3.json\")"
+    "text": "Refer to his kickstarter! This is for MC3, Subtask 1!\n\n\nShow code\npacman::p_load(jsonlite)\n\n\n\n\nShow code\nmc3_data <- fromJSON(\"data/MC3.json\")"
   },
   {
     "objectID": "Hands-on_Ex/Hands-on_Ex03B/Hands-on_Ex03B.html",
