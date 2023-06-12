@@ -1,5 +1,5 @@
 ---
-title: "Take Home Exercise 3"
+title: "Mini Challenge 3 - VAST Challenge 2023"
 author: "Sherinah Rashid"
 date: '5 May 2023'
 editor: visual
@@ -17,20 +17,206 @@ execute:
   freeze: auto
 ---
 
-Refer to his kickstarter! This is for MC3, Subtask 1!
+# Background
+
+This Take-Home Exercise is part of the VAST Challenge 2023. The country of Oceanus has sought FishEye International's help in identifying companies possibly engaged in illegal, unreported, and unregulated (IUU) fishing. They hope to understand business relationships, including finding links that will help them stop IUU fishing and protect marine species that are affected by it.
+
+FishEye analysts have attempted to use traditional node-link visualizations and standard graph analyses, but these were found to be ineffective because the scale and detail in the data can obscure a business's true structure. FishEye now wants your help to develop a new visual analytics approach to better understand fishing business anomalies.
+
+In line with this, this page will attempt to answer the following task under Mini-Challenge 3 of the VAST Challenge:
+
+**Use visual analytics to identify anomalies in the business groups present in the knowledge graph. Limit your response to 400 words and 5 images.**
+
+**Develop a visual analytics process to find similar businesses and group them. This analysis should focus on a business's most important features and present those features clearly to the user. Limit your response to 400 words and 5 images.**
+
+# Dataset
+
+Fisheye has transformed the data into a undirected multi-graph consisting of 27,622 nodes and 24,038 edges. Details of the attributes provided are listed below:
+
+**Nodes:**
+
+-   **type** -- Possible node types include: {company and person}. Possible node sub types include: {beneficial owner, company contacts}.
+
+-   **country** -- Country associated with the entity. This can be a full country or a two-letter country code.
+
+-   **product_services** -- Description of product services that the "id" node does. 
+
+-   **revenue_omu** -- Operating revenue of the "id" node in Oceanus Monetary Units. 
+
+-   **id** -- Identifier of the node is also the name of the entry.
+
+-   **role** -- The subset of the "type" node, not in every node attribute. 
+
+-   **dataset** -- Always "MC3". 
+
+**Links:**
+
+-   **type** -- Possible edge types include: {person}. Possible edge sub types include: {beneficial owner, company contacts}.
+
+-   **source** -- ID of the source node. 
+
+-   **target** -- ID of the target node. 
+
+-   **dataset** -- Always "MC3".
+
+# Data Wrangling
+
+## Data Import
+
+Let's first load the packages and datasets to be used.
 
 ```{r}
-pacman::p_load(jsonlite)
+pacman::p_load(jsonlite, tidygraph, ggraph, 
+               visNetwork, graphlayouts, ggforce, 
+               skimr, tidytext, tidyverse)
 ```
+
+In the code chunk below, fromJSON() of jsonlite package is used to import MC3.json into R environment. Examination of the dataset shows that it is a large list R object.
 
 ```{r}
 mc3_data <- fromJSON("data/MC3.json")
 ```
 
-```{r}
+## Extracting Edges
 
+The code chunk below will be used to extract the links data.frame of mc3_data and save it as a tibble data.frame called mc3_edges.
+
+::: callout-note
+-   `distinct()` is used to ensure that there will be no duplicated records.
+-   `mutate()` and `as.character()` are used to convert the field data type from list to character.
+-   `group_by()` and `summarise()` are used to count the number of unique links.
+-   the `filter(source!=target)` is to ensure that there are no records with similar source and target.
+:::
+
+```{r}
+mc3_edges <- as_tibble(mc3_data$links) %>% 
+  distinct() %>%
+  mutate(source = as.character(source),
+         target = as.character(target),
+         type = as.character(type)) %>%
+  group_by(source, target, type) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
 ```
 
-```{r}
+## Extracting Nodes
 
+The code chunk below will be used to extract the nodes data.frame of mc3_data and save it as a tibble data.frame called mc3_nodes.
+
+::: callout-note
+-   `mutate()` and `as.character()` are used to convert the field data type from list to character.
+-   To convert *revenue_omu* from list data type to numeric data type, we need to convert the values into character first by using `as.character()`. Then, `as.numeric()` will be used to convert them into numeric data type.
+-   `select()` is used to re-organise the order of the fields.
+:::
+
+```{r}
+mc3_nodes <- as_tibble(mc3_data$nodes) %>%
+  mutate(country = as.character(country),
+         id = as.character(id),
+         product_services = as.character(product_services),
+         revenue_omu = as.numeric(as.character(revenue_omu)),
+         type = as.character(type)) %>%
+  select(id, country, type, revenue_omu, product_services)
 ```
+# Initial Data Exploration
+
+## Exploring the edges data frame
+
+In the code chunk below, skim() of skimr package is used to display the summary statistics of mc3_edges tibble data frame. The report reveals that there is no missing values.
+
+
+```{r}
+skim(mc3_edges)
+```
+In the code chunk below, datatable() of DT package is used to display mc3_edges tibble data frame as an interactive table.
+
+```{r}
+DT::datatable(mc3_edges)
+```
+Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 16,000 edges for beneficial owner, and about 7,500 edges for company contacts.
+
+```{r}
+ggplot(data = mc3_edges,
+       aes(x = type)) +
+  geom_bar(fill="slategray1") + 
+  theme_classic() 
+```
+
+## Exploring the nodes data frame
+
+Similarly, skim() of skimr package is used to display the summary statistics of mc3_nodes tibble data frame. The report reveals that there is no missing values.
+
+```{r}
+skim(mc3_nodes)
+```
+
+In the code chunk below, datatable() of DT package is used to display mc3_nodes tibble data frame as an interactive table.
+
+```{r}
+DT::datatable(mc3_nodes)
+```
+
+Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 12,000 nodes for beneficial owners, 8,750 nodes for company, and 7,000 nodes for company contacts. 
+
+```{r}
+ggplot(data = mc3_nodes,
+       aes(x = type)) +
+  geom_bar(fill="slategray1") + 
+  theme_classic() 
+```
+
+# Initial Network Visualisation and Analysis
+
+Instead of using the nodes data table extracted from the original dataset, we will prepare a new nodes data table by using the source and target fields of mc3_edges table. This is necessary to ensure that the nodes in the nodes data tables include all the source and target values.
+
+```{r}
+id1 <- mc3_edges %>%
+  select(source) %>%
+  rename(id = source)
+id2 <- mc3_edges %>%
+  select(target) %>%
+  rename(id = target)
+mc3_nodes1 <- rbind(id1, id2) %>%
+  distinct() %>%
+  left_join(mc3_nodes,
+            unmatched = "drop")
+```
+
+We will then calculate the betweenness and closeness centrality measures. 
+
+```{r}
+mc3_graph <- tbl_graph(nodes = mc3_nodes1,
+                       edges = mc3_edges,
+                       directed = FALSE) %>%
+  mutate(betweenness_centrality = centrality_betweenness(),
+         closeness_centrality = centrality_closeness())
+```
+
+Now, let's plot the network graph using the tidygraph() function. 
+
+```{r}
+mc3_graph %>%
+  filter(betweenness_centrality >= 100000) %>%
+ggraph(layout = "fr") +
+  geom_edge_link(aes(alpha=0.5)) +
+  geom_node_point(aes(
+    size = betweenness_centrality,
+    colors = "lightblue",
+    alpha = 0.5)) +
+  scale_size_continuous(range=c(1,10))+
+  theme_graph()
+```
+
+# Making Sense of the Nodes??
+
+```{r}
+categories <- mc3_nodes1 %>%
+  count(product_services, sort = TRUE) %>%
+  top_n(10)
+
+# Printing the table
+print(categories)
+```
+
+

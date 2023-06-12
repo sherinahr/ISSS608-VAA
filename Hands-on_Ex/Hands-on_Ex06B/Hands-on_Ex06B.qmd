@@ -13,7 +13,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: true
+  freeze: auto
 ---
 
 # Part 1: Heatmap for Visualising and Analysing Multivariate Data
