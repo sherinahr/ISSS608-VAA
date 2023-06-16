@@ -119,21 +119,23 @@ mc3_nodes <- as_tibble(mc3_data$nodes) %>%
          type = as.character(type)) %>%
   select(id, country, type, revenue_omu, product_services)
 ```
+
 # Initial Data Exploration
 
 ## Exploring the edges data frame
 
 In the code chunk below, skim() of skimr package is used to display the summary statistics of mc3_edges tibble data frame. The report reveals that there is no missing values.
 
-
 ```{r}
 skim(mc3_edges)
 ```
+
 In the code chunk below, datatable() of DT package is used to display mc3_edges tibble data frame as an interactive table.
 
 ```{r}
 DT::datatable(mc3_edges)
 ```
+
 Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 16,000 edges for beneficial owner, and about 7,500 edges for company contacts.
 
 ```{r}
@@ -157,7 +159,7 @@ In the code chunk below, datatable() of DT package is used to display mc3_nodes 
 DT::datatable(mc3_nodes)
 ```
 
-Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 12,000 nodes for beneficial owners, 8,750 nodes for company, and 7,000 nodes for company contacts. 
+Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 12,000 nodes for beneficial owners, 8,750 nodes for company, and 7,000 nodes for company contacts.
 
 ```{r}
 ggplot(data = mc3_nodes,
@@ -183,7 +185,7 @@ mc3_nodes1 <- rbind(id1, id2) %>%
             unmatched = "drop")
 ```
 
-We will then calculate the betweenness and closeness centrality measures. 
+We will then calculate the betweenness and closeness centrality measures.
 
 ```{r}
 mc3_graph <- tbl_graph(nodes = mc3_nodes1,
@@ -193,7 +195,7 @@ mc3_graph <- tbl_graph(nodes = mc3_nodes1,
          closeness_centrality = centrality_closeness())
 ```
 
-Now, let's plot the network graph using the tidygraph() function. 
+Now, let's plot the network graph using the tidygraph() function.
 
 ```{r}
 mc3_graph %>%
@@ -210,6 +212,8 @@ ggraph(layout = "fr") +
 
 # Making Sense of the Nodes??
 
+Maybe we can see what categories there are for the nodes and then see if there is overlap
+
 ```{r}
 categories <- mc3_nodes1 %>%
   count(product_services, sort = TRUE) %>%
@@ -218,5 +222,3 @@ categories <- mc3_nodes1 %>%
 # Printing the table
 print(categories)
 ```
-
-
