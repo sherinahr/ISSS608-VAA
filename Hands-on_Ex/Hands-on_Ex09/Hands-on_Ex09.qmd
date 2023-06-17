@@ -13,7 +13,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: true
+  freeze: auto
 ---
 
 By the end of this hands-on exercise, we will be able to:
@@ -30,7 +30,7 @@ For the purpose of this hands-on exercise, the following R packages will be used
 
 ```{r}
 pacman::p_load(lubridate, ggthemes, reactable,
-reactablefmtr, gt, gtExtras, tidyverse)
+reactablefmtr, gt, gtExtras, tidyverse, svglite)
 ```
 
 -   [tidyverse](https://www.tidyverse.org/) provides a collection of functions for performing data science task such as importing, tidying, wrangling data and visualising data. It is not a single package but a collection of modern R packages including but not limited to [readr](https://readr.tidyverse.org/), [tidyr](https://tidyr.tidyverse.org/), [dplyr](https://dplyr.tidyverse.org/), [ggplot](https://ggplot2.tidyverse.org/), [tibble](https://tibble.tidyverse.org/), [stringr](https://stringr.tidyverse.org/), [forcats](https://forcats.tidyverse.org/) and [purrr](https://purrr.tidyverse.org/).
@@ -59,7 +59,7 @@ Note: Before running the code chunk, you need to change the R system to 32bit ve
 
 ```{r}
 library(RODBC)
-con <- odbcConnectAccess('data/Coffee Chain.mdb')
+con <- odbcConnectAccess2007('data/Coffee Chain.mdb')
 coffeechain <- sqlFetch(con, 'CoffeeChain Query')
 write_rds(coffeechain, "data/CoffeeChain.rds")
 odbcClose(con)
@@ -70,7 +70,7 @@ odbcClose(con)
 The code chunk below is used to import *CoffeeChain.rds* into R.
 
 ```{r}
-coffeechain <- read_rds("data/rds/CoffeeChain.rds")
+coffeechain <- read_rds("data/CoffeeChain.rds")
 ```
 
 Note: This step is optional if *coffeechain* is already available in R.
@@ -126,7 +126,7 @@ sales_report <- coffeechain %>%
   select(Month, Product, Sales)
 ```
 
-The code chunk below is used to compute the minimum, maximum and end othe the month sales.
+The code chunk below is used to compute the minimum, maximum and end of the the month sales.
 
 ```{r}
 mins <- group_by(sales_report, Product) %>% 
