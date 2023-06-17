@@ -27,8 +27,6 @@ In line with this, this page will attempt to answer the following task under Min
 
 **Use visual analytics to identify anomalies in the business groups present in the knowledge graph. Limit your response to 400 words and 5 images.**
 
-**Develop a visual analytics process to find similar businesses and group them. This analysis should focus on a business's most important features and present those features clearly to the user. Limit your response to 400 words and 5 images.**
-
 # Dataset
 
 Fisheye has transformed the data into a undirected multi-graph consisting of 27,622 nodes and 24,038 edges. Details of the attributes provided are listed below:
@@ -124,22 +122,75 @@ mc3_nodes <- as_tibble(mc3_data$nodes) %>%
 
 ## Exploring the edges data frame
 
-In the code chunk below, skim() of skimr package is used to display the summary statistics of mc3_edges tibble data frame. The report reveals that there is no missing values.
+In the code chunk below, skim() of skimr package is used to display the summary statistics of mc3_edges tibble data frame. The report reveals that there is no missing values. However, though we had broken the MC3 data from its list, we can see from the max value of 700 under "source" that there may be grouped companies, up to 700 in 1 line! This will be tough for our analysis and so we have to break these nested lists down to the individual source companies.
 
 ```{r}
 skim(mc3_edges)
 ```
 
-In the code chunk below, datatable() of DT package is used to display mc3_edges tibble data frame as an interactive table.
+Let's try unnest the lists. First, we will filter out the rows where there is nested lists. From looking at the data source in R console, we know that these values begins with "c(". From the results below, we can see there are 2,169 records which are nested.
 
 ```{r}
-DT::datatable(mc3_edges)
+nested_edges <- mc3_edges %>%
+  filter(startsWith(source, "c("))
+nested_edges
+```
+
+First, we use separate_rows() to split the character vectors into separate elements based on the comma separator. Next, we remove leading and trailing whitespace using str_trim(). We then use the str_replace() function to remove the unwanted characters of ", (, and ). Lastly, we filter out any empty rows using filter(). Checking the filtered dataset shows that it worked!
+
+```{r}
+# Split the character vectors into separate elements
+nested_edges_sep <- nested_edges %>%
+  separate_rows(source, sep = ", ")
+
+# Remove leading and trailing whitespace
+nested_edges_sep <- nested_edges_sep %>%
+  mutate(source = str_trim(source))
+
+# Remove the c(), ", (, and ) characters
+nested_edges_sep <- nested_edges_sep %>%
+  mutate(source = gsub('^c\\(|"|\\)$', '', source))
+
+# Check the end output
+nested_edges_sep
+
+```
+
+To join the filtered dataset back with the original edges dataset, we will first remove the rows from the mc3_edges which were nested. We will then add in the filtered and unnested data. Since there's many repetitions of the companies, let's do some grouping. Lastly, let's use the skim function again to check the resulting dataset for the edges. It works out - the maximum length of the source has gone down to 64, yay!
+
+```{r}
+
+# Remove rows with nested records
+edges <- mc3_edges %>%
+  anti_join(nested_edges)
+
+# Add in the filtered data 
+edges <- edges %>%
+  rbind(edges, nested_edges_sep)
+
+# Group by source and target due to repetitions
+edges_agg <- edges %>%
+  group_by(source, target, type) %>%
+  summarise(weight = n()) %>%
+  filter(weight > 1) %>%
+  ungroup() 
+
+# Check output
+skim(edges_agg)
+
+
+```
+
+In the code chunk below, datatable() of DT package is used to display the aggregated edges tibble data frame as an interactive table.
+
+```{r}
+DT::datatable(edges_agg)
 ```
 
 Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 16,000 edges for beneficial owner, and about 7,500 edges for company contacts.
 
 ```{r}
-ggplot(data = mc3_edges,
+ggplot(data = edges_agg,
        aes(x = type)) +
   geom_bar(fill="slategray1") + 
   theme_classic() 
@@ -147,22 +198,29 @@ ggplot(data = mc3_edges,
 
 ## Exploring the nodes data frame
 
-Similarly, skim() of skimr package is used to display the summary statistics of mc3_nodes tibble data frame. The report reveals that there is no missing values.
+Similarly, skim() of skimr package is used to display the summary statistics of mc3_nodes tibble data frame. The report reveals that there is 21,515 missing values for revenue_omu variable.
 
 ```{r}
 skim(mc3_nodes)
 ```
 
-In the code chunk below, datatable() of DT package is used to display mc3_nodes tibble data frame as an interactive table.
+Let's check for duplicates using the distinct function.
 
 ```{r}
-DT::datatable(mc3_nodes)
+mc3_nodes_d <-distinct(mc3_nodes)
+
 ```
 
-Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 12,000 nodes for beneficial owners, 8,750 nodes for company, and 7,000 nodes for company contacts.
+In the code chunk below, datatable() of DT package is used to display the distinct mc3_nodes tibble data frame as an interactive table. Initially, there were 27,622 rows and it has now reduced to 25,027 rows. There were about 2,000 duplicate rows.
 
 ```{r}
-ggplot(data = mc3_nodes,
+DT::datatable(mc3_nodes_d)
+```
+
+Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 10,000 nodes for beneficial owners, 8,750 nodes for company, and 6,000 nodes for company contacts.
+
+```{r}
+ggplot(data = mc3_nodes_d,
        aes(x = type)) +
   geom_bar(fill="slategray1") + 
   theme_classic() 
@@ -170,18 +228,18 @@ ggplot(data = mc3_nodes,
 
 # Initial Network Visualisation and Analysis
 
-Instead of using the nodes data table extracted from the original dataset, we will prepare a new nodes data table by using the source and target fields of mc3_edges table. This is necessary to ensure that the nodes in the nodes data tables include all the source and target values.
+Instead of using the nodes data table extracted from the original dataset, we will prepare a new nodes data table by using the source and target fields of the aggregated edges table. This is necessary to ensure that the nodes in the nodes data tables include all the source and target values.
 
 ```{r}
-id1 <- mc3_edges %>%
+id1 <- edges_agg %>%
   select(source) %>%
   rename(id = source)
-id2 <- mc3_edges %>%
+id2 <- edges_agg %>%
   select(target) %>%
   rename(id = target)
 mc3_nodes1 <- rbind(id1, id2) %>%
   distinct() %>%
-  left_join(mc3_nodes,
+  left_join(mc3_nodes_d,
             unmatched = "drop")
 ```
 
@@ -189,7 +247,7 @@ We will then calculate the betweenness and closeness centrality measures.
 
 ```{r}
 mc3_graph <- tbl_graph(nodes = mc3_nodes1,
-                       edges = mc3_edges,
+                       edges = edges_agg,
                        directed = FALSE) %>%
   mutate(betweenness_centrality = centrality_betweenness(),
          closeness_centrality = centrality_closeness())
