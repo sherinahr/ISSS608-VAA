@@ -1,7 +1,6 @@
 ---
 title: "Mini Challenge 3 - VAST Challenge 2023"
 author: "Sherinah Rashid"
-date: '5 May 2023'
 editor: visual
 format:
   html: 
@@ -128,6 +127,8 @@ In the code chunk below, skim() of skimr package is used to display the summary 
 skim(mc3_edges)
 ```
 
+### Unnesting the lists
+
 Let's try unnest the lists. First, we will filter out the rows where there is nested lists. From looking at the data source in R console, we know that these values begins with "c(". From the results below, we can see there are 2,169 records which are nested.
 
 ```{r}
@@ -187,6 +188,8 @@ In the code chunk below, datatable() of DT package is used to display the aggreg
 DT::datatable(edges_agg)
 ```
 
+### Type of Edges
+
 Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 16,000 edges for beneficial owner, and about 7,500 edges for company contacts.
 
 ```{r}
@@ -204,6 +207,8 @@ Similarly, skim() of skimr package is used to display the summary statistics of 
 skim(mc3_nodes)
 ```
 
+### Removing Duplicate Nodes
+
 Let's check for duplicates using the distinct function.
 
 ```{r}
@@ -217,7 +222,9 @@ In the code chunk below, datatable() of DT package is used to display the distin
 DT::datatable(mc3_nodes_d)
 ```
 
-Let's plot a bar graph to show the type of edges. As we can see from the barchart below, there are about 10,000 nodes for beneficial owners, 8,750 nodes for company, and 6,000 nodes for company contacts.
+### Type of Nodes
+
+Let's plot a bar graph to show the type of nodes. As we can see from the barchart below, there are about 10,000 nodes for beneficial owners, 8,750 nodes for company, and 6,000 nodes for company contacts.
 
 ```{r}
 ggplot(data = mc3_nodes_d,
@@ -226,7 +233,7 @@ ggplot(data = mc3_nodes_d,
   theme_classic() 
 ```
 
-# Initial Network Visualisation and Analysis
+# Insight 1 - Entire Network Visualisation
 
 Instead of using the nodes data table extracted from the original dataset, we will prepare a new nodes data table by using the source and target fields of the aggregated edges table. This is necessary to ensure that the nodes in the nodes data tables include all the source and target values.
 
@@ -253,7 +260,7 @@ mc3_graph <- tbl_graph(nodes = mc3_nodes1,
          closeness_centrality = centrality_closeness())
 ```
 
-Now, let's plot the network graph using the tidygraph() function.
+Now, let's plot the network graph using the tidygraph() function. We can see from the graph that there is a large number of nodes with high betweenness centrality, from the large circles in the middle of the graph. We will not be using this network any further, but it is interesting to see how the network is set-up!
 
 ```{r}
 mc3_graph %>%
@@ -268,15 +275,172 @@ ggraph(layout = "fr") +
   theme_graph()
 ```
 
-# Making Sense of the Nodes??
+# Insight 2 - Exploring the Companies with Top Revenue
 
-Maybe we can see what categories there are for the nodes and then see if there is overlap
+## Combining Datasets
+
+As we want to highlight possible anomalies in the dataset, we can do so by first looking at which companies have the highest revenue, and where these companies come from. To do this, let's build a heatmap. First, we will have to join the edges_agg and mc3_nodes1 datasets so that we can create a complete dataset where there is more background information on each company.
 
 ```{r}
-categories <- mc3_nodes1 %>%
-  count(product_services, sort = TRUE) %>%
-  top_n(10)
-
-# Printing the table
-print(categories)
+combined_data <- left_join(edges_agg, mc3_nodes1,
+                               by = c("source" = "id"))
+combined_data
 ```
+
+## Removing rows with missing values
+
+When we look at the dataset, we can see that there are many "unknown" and "character(0)" values under the product_services column. We should remove the rows with these values as they will not be useful for our analysis. Upon checking the results, it seems to have worked as the number of rows have now reduced from 28,852 to 10,630!
+
+```{r}
+combined_data1 <- combined_data %>%
+  group_by(source, target,type.x, weight, country, type.y, revenue_omu, product_services) %>%
+  filter(source!=target) %>%
+  rename(sourcetype = type.y) %>%
+  rename(targettype = type.x) %>%
+  filter(product_services != "Unknown") %>%
+  filter(product_services != "character(0)") %>%
+  ungroup()
+
+#Check the dataset
+combined_data1
+
+```
+
+## Filtering the Top 50 Companies
+
+Since we are interested in knowing more about the companies, let's select some relevant details for the dataset, such as the country, weights, revenue, and their product services. It will not be useful to look at all the companies, so let's look at the Top 50 companies, which will be the second portion of the code chunk.
+
+```{r}
+#Select the fields we want first
+combined_data2 <- combined_data1 %>%
+  select (source, sourcetype, country, weight, revenue_omu, product_services) %>%
+  group_by(source) %>%
+  arrange(desc(revenue_omu)) %>%
+  distinct() %>%
+  ungroup()
+
+#Filter the top 50 companies
+combined_data_top50 <- combined_data2 %>%
+  filter (sourcetype == "Company") %>%
+  slice_max(order_by = revenue_omu, n = 50)
+
+```
+
+## Building the Heatmap & Visual Analysis
+
+When we look at the heatmap, we can see that the y-axis comprises of the various countries the companies are from, and the x-axis are the different companies. The different shades of blue indicate the varying revenue, from \$3,652 up till \$310.6million - such a wide range!
+
+Looking at the chart, we can see that country ZH has the most number of companies which have the highest revenue (Jones LLC and Patton Ltd), which can be considered an anomaly, since no other country for the Top 50 companies have such high revenue.
+
+```{r}
+#Build the heatmap
+ggplot(combined_data_top50, aes(x = source, y = country, fill = revenue_omu)) +
+  geom_tile() +
+  labs(x = "Company", y = "Country", title = "Top 50 Companies by Revenue") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+# Insight 3 - Investigating the Owners
+
+A key indicator of a red flag is actually vessel identity fraud in IUU. A vessel may use more than one identity, appearing under different names in different jurisdictions, or may use the identify of another genuine vessel, which results in 2 or more vessels having the same identify concurrently. Along the same vein, some owners may actually set up shell companies to transfer the illegal catches while concurrently conducting legitimate business under other names, and these shell companies may be set up in different countries to avoid detection.
+
+As such, these last 2 insights will look at different ways possible anomalies may arise. Let's look at the owners - do any owners own perhaps more than 3 companies?
+
+## Preparing the data
+
+For this, we would first filter out the beneficial owners, and then filter those who own more than 3 companies. However upon plotting the chart, there were more than 10 owners who had at least 4 companies, so let's change the limit to 5 and more.
+
+```{r}
+#Filter out the owners
+combined_data_owners <- combined_data %>%
+  select (target, source, type.x, weight) %>%
+  group_by(target) %>%
+  filter(type.x == "Beneficial Owner") %>%
+  rename (owner = target) %>%
+  rename (cmpny = source) %>%
+  distinct() %>%
+  ungroup()
+
+#Filter individuals who own 5 and more companies
+combined_data_owners_5 <- combined_data_owners %>%
+  group_by(owner) %>%
+  filter(n() > 4) %>%
+  ungroup()
+
+#Summarise count of companies per owner
+companies_per_owner <- combined_data_owners_5 %>%
+  group_by(owner) %>%
+  summarize(Count = n()) %>%
+  arrange(desc(Count)) 
+
+#Check resulting dataset
+companies_per_owner
+
+```
+
+## Building the barchart
+
+Looking at the barchart, we can see that there are 14 owners who own 5 companies, and 9 owners who own MORE THAN 5 companies. In fact, 2 of them - John Smith and Michael Johnson - own 9 companies each, and Jennifer Smith owns 8 companies. I think this is definitely an anomaly which should be taken into consideration for further investigation by the relevant authorities.
+
+```{r}
+ggplot(companies_per_owner, aes(x = reorder(owner, -Count), y = Count)) +
+  geom_bar(stat = "identity", fill = "slategray1") +
+  labs(x = "Owner", y = "Number of Companies", title = "Number of Companies per Owner") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+# Insight 4 - Investigating the Countries of Companies
+
+As stated above, we have highlighted 3 owners who owned than 7 companies, which is a red flag in terms of shell companies. The last red flag we would want to explore is to find out if there are any companies which are registered to more than 2 countries, as this could be a sign of company identity fraud. We keep 2 as the threshold as it's possible that perhaps the Headquarters is in one country, and the subsidiary company is in another one.
+
+## Preparing the data
+
+We would first need to filter out all the companies, and then see which ones are registered in more than 2 countries. There were 53 lines of record which met the criteria.
+
+```{r}
+#Filter out all companies
+combined_data_countries <- combined_data %>%
+  select (source, country, type.y) %>%
+  group_by(source) %>%
+  filter(type.y == "Company") %>%
+  distinct() %>%
+  ungroup()
+
+#Filter those that are registered in more than 2 country
+combined_data_countries1 <- combined_data_countries %>%
+  group_by(source) %>%
+  filter(n() > 2) %>%
+  ungroup()
+
+#Check dataset
+combined_data_countries1
+```
+
+## Building the horizontal barchart
+
+We can see from the barchart that Aqua Aura SE Marine Life is registered in a whopping 9 companies! Next would be Transit Limited Liability Company and Tamil Nadu, which are registered in 4 countries. It would be beneficial to flag these 3 countries as an anomaly.
+
+```{r}
+# Plot the bar chart
+ggplot(data = combined_data_countries1, aes(x = source)) +
+  geom_bar(fill = "slategray1") +
+  coord_flip() +
+  xlab("Companies") +
+  theme_classic() +
+  ylab("No of countries registered") +
+  theme(axis.text.y = element_text(size = 9))
+```
+
+Upon knowing that Aqua Aura spans across 9 companies, I went to check its owners. Interestingly, it has more than 30 owners. Of course, beneficial owners refer to any individuals or entities that ultimately own, control, or benefit from a company or asset. Since ownership structures can be complex, the number of beneficial owners can vary depending on factors such as the size of the company, its ownership structure, and the legal requirements of the jurisdiction in which the company operates. In this case, it is possible that all of these owners are joint stakeholders. Nonetheless, it bears further investigation.
+
+# Key Takeaways
+
+1.  There are a few anomalies which are of concern. Firstly, there are a number of companies which are pulling in high revenue and are concentrated in country ZH. It's possible that the conditions around ZH are ripe for IUU and thus perhaps there can be more monitoring in those seas.
+
+2.  There are also 3 owners who seem to own an extremely high number of companies, which may suggest the existence of shell companies which are used to launder the illegal proceeds from IUU. It would be prudent to check into the backgrounds of these individuals.
+
+3.  There are also a few companies which are registered to more than 2 countries. This is also a possible red flag for the shell companies and money laundering, and thus should be checked thoroughly in terms of their records to ensure that they are legitimate businesses.
